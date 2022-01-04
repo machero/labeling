@@ -1,0 +1,2724 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf8" />
+    <title>小Ann</title>
+    <script src="jquery.min.js"></script>
+    <script src="FileSaver.js"></script>
+    <script src="mousetrap.min.js"></script>
+    <script src="server.js"></script>
+    <script src="keybind.js"></script>
+    <script src="entity_type.js" ></script>
+    <script src="relation_type.js" ></script>
+    <script type="text/javascript" src="qwebchannel.js"></script>
+</head>
+<style>
+body {
+	margin: 0.5em;
+	padding: 0.5em;
+    background: #4a4948;
+    width:100%;
+    height: 100%;
+}
+span{
+    word-break: break-all;
+}
+.black_overlay{ display: none; position: fixed; top: 0%; left: 0%; width: 100%; height: 100%; background-color: black; z-index:1001; -moz-opacity: 0.6; opacity:.60; filter: alpha(opacity=60); }
+
+.white_content { display: none; position: fixed; top: 25%; left: 25%; width: 50%; height: 50%; padding: 16px; border: 16px solid orange; background-color: white; z-index:1002; overflow: auto; }
+
+.cursor{
+    height: 21px;
+    width: 2px;
+    background-color: #fff;
+    float: left;
+}
+#head{
+    padding-bottom: 1em;
+    position: fixed;
+    top:0em;
+    margin: 0em;
+    padding: 0em 1em 2px 1em;
+    left: 0;
+    right: 0;
+    background: #DAA520;
+    font-size: 18px;
+    z-index: 0;
+}
+#import{
+    float: left;
+    width:50%;
+}
+#state{
+    right: 250px;
+    float: right;
+}
+#main{
+    display: inline;
+    padding: 1em;
+    position: relative;
+}
+#line_number{
+    width: 32px;
+    margin-top: 85px;
+    font-size: 21px;
+    text-align: right;
+    padding: 0;
+    float: left;
+    /*z-index: -999;*/
+    position: relative;
+}
+#CurrentContent{
+    /*width: 85%;*/
+    line-height: 27px;
+	font-size: 21px;
+    margin-left: 0.2em;
+    margin-top: 85px;
+    margin-bottom: 80px;
+    float: left;
+    position: relative;
+    z-index: -999;
+    word-break: break-all;
+}
+#info_list{
+    /*width: 15%;*/
+    float: right;
+    position: fixed;
+    right: 2em;
+    margin-top: 60px;
+    /*z-index: 2;*/
+}
+#info_list ul {
+    padding: 0em;
+    margin-left: 2em;
+    text-align: center;
+}
+li{
+        list-style-type: none;
+
+}
+#info_list ul li{
+
+    width: 190px;
+
+}
+
+#info_list ul li p{
+    border-style: solid;
+    border-color: gray;
+    text-align: center;
+    width: 100%;
+    font-size: 15px;
+    /*position: relative;*/
+    position: relative;
+    float: left;
+    margin: 0.2em;
+}
+#info_list ul li button{
+    border-style: solid;
+    border-color: gray;
+    width: 100%;
+    margin: 0.2em;
+    font-size: 15px;
+
+}
+#info_list ul li input,select{
+    border-style: solid;
+    border-color: gray;
+    width: 40%;
+    margin: 0.2em;
+    font-size: 1em;
+    float: left;
+
+}
+
+
+#relation_type ul li button{
+    border-style: solid;
+    border-color: gray;
+    width: 25%;
+    /*margin: 0.2em;*/
+    font-size: 1.2em;
+
+}
+#entity_type ul li button{
+    border-style: solid;
+    border-color: gray;
+    width: 25%;
+    /*margin: 0.2em;*/
+    font-size: 1.2em;
+
+}
+#jump{
+    margin: 0.5em;
+    float: left;
+    font-size: 1em;
+}
+input,button{
+    border-style: solid;
+    border-color: gray;
+    margin: 0.1em;
+    font-size: 15px;
+}
+#bottom{
+    position: fixed;
+    bottom: 0;
+    margin: 0;
+    padding: 2px;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    background: #DAA520;
+    font-size: 16px;
+    z-index: 5;
+}
+</style>
+<script>
+</script>
+<body style='overflow:-Scroll;overflow-x:hidden'>
+    <div id="head">
+            <h1 style="margin: 2px">小Ann标注工具</h1>
+            <div id="import">
+            	<a id="filename" style="float: left;margin: 0.2em">先导入文本</a>
+                
+            </div>
+            <div id="state">
+                <a id="progress">当前进度：无</a>
+            </div>
+    </div>
+    <div id="main">
+        <ul id="line_number">
+
+        </ul>
+        <div id="CurrentContent">
+
+        </div>
+        <div id="info_list">
+            <ul>
+                <li>
+                    <input type="file" id="files" style="display: none;" hidefocus="true" onchange="fileImport();">
+                    <button style="background:#557766;width: 100%;font-size: 18px;" onclick="document.getElementById('files').click()";>导入文本</button>
+
+                    
+                </li>
+                <li>
+                <p style="color:white;"><input type="checkbox" id="seqlab_flag" value="序列辅助标注" />序列辅助标注 </p>
+                </li>
+                <!-- <li>                
+                <p style="color:white;float: left;"><input type="checkbox" id="cursor_auto_run" value="光标自动移动" />光标自动移动 </p>
+                </li> -->
+                <li>                
+                <p style="color:white;"><input type="checkbox" id="cut_save_flag" value="截断保存" />截断保存 </p>
+                </li>
+                <li>
+                    <select id="jump" style="float: left;width: 40%">
+                    </select>
+                    <input type='button' value='跳转' style="width: 40%" onClick="jump(false)"/>
+                </li>
+                <li>
+                    <p id="annoted_spo" style="background:#A9A9A9">已标注：0 对三元组</p>
+                </li>
+                <li>
+                    <p id="annoted_entity" style="background:#A9A9A9">已标注：0 个新实体</p>
+                </li>
+<!--                 <li>
+                    <p id="annoted_relation" style="background:#A9A9A9">已标注：0 个新关系</p>
+                </li> -->
+<!--                 <li>
+                    <p id="cancle_point" style="background:#A9A9A9">已取消：0 个标注点</p>
+                </li> -->
+                <li>
+                    <input type="text" id="insert_input" style="width: 25%;float:left;text-align: center;font-size: 15px;"  value="字符" >
+                    <button style="background:#008B8B;float: left;width: 30%;font-size: 15px" onclick="insert_char()">插入</button>
+                    <button  id='del' style="background:#dd8B8B;float: left;width: 30%;font-size: 15px" onclick="delete_char()">删除</button>
+                </li>
+                <li>
+                    <button style="background:#4682B4;float: left;width: 46%" onclick="add_entity()">实体</button>
+                    
+                    <button style="background:#FF00FF;float: left;width: 46%" onclick="cancle()">取消</button>
+                </li>
+
+                <li>
+                    <p id="indicator" style="background:gray;">未选中</p>
+                </li>
+                <li>
+                    <button style="background:#008B8B;float: left;width:45%" onclick="save_dict()">保存词条</button>
+                    <button style="background:#008B8B;float: left;width:45%" onclick="save()">保存语料</button>
+                </li>
+                <li>
+                    <textarea id="console" rows="10" cols="30" style="width: 100%;height:20% ;">终端信息：</textarea>
+              
+                </li>
+            </ul>
+
+        </div>
+    </div>
+    <div id="entity_type" class="white_content">
+      <p id="given_by_server_e"></p>
+      <ul id="entity_type_config">
+      <li><button style="background:#4581B3;float: left;padding: 0.5em" onclick="selecte()">空格:默认</button></li>
+      <li><button style="background:#FF00FF;float: left;padding: 0.5em" onclick="type_choose_close()">n:取消</button></li>
+    </ul>
+    </div>
+    <div id="relation_type" class="white_content">
+      <p id="given_by_server_r"></p>
+      <ul id="relation_type_config">
+        <li><button style="background:#218a21;float: left;padding: 0.5em" onclick="selecte()">空格:默认</button></li>
+        <li><button style="background:#FF00FF;float: left;padding: 0.5em" onclick="spo_global=[];type_choose_close()">n:取消</button></li>
+      </ul>
+
+    </div>
+    <div id="fade" class="black_overlay">
+    </div>
+<div id="bottom">
+    <button style="padding: 0.5em" onclick="previous()">上一条</button>
+    <a style="margin: 2px">当前选择：</a>
+    <a id="selected" style="padding: 0.5em">等你点击或者选择</a>
+    <a id="relation" style="padding: 3em;color:#226945;font-size: 1em"></a>
+    <a id="number_input" style="padding: 3em;color:#FF0000;font-size: 1.5em "></a>
+    <button style="padding: 0.5em;float:right;" onclick="next()">下一条</button>
+</div>
+<script type="text/javascript">
+    var txts;
+	var imported_flag=0;
+
+    var current_page_index=-1;
+    var current_char_index=-1;
+    
+    var end_char_index=-1;
+    var total_char_index=-1;
+    var spo_relative_start_index=-1;
+    
+
+    var total=-1;
+    var last_char_index_queue = [0,0];
+    var all_samples_loaded=[];
+    var all_spos_loaded=[];
+    var all_labels_loaded=[];
+    var spo_need_display = [];
+
+    var entity_diction = new Array();
+    var relation_diction = new Array();
+    var server_usable = 0;
+    var spo_global=[];//存储全局spo，采用绝对索引值
+    var sp_lock=[];
+    var page_predicted=[];
+    var spo_label_a_obj_list_per_page = [];
+    var start_end = [0,0];
+    var obj_mousedown;
+    var obj_mouseup;
+    var filename="";
+    var contents="";
+    var txtselected="";
+    var number_input="";
+    var type="";
+    var type_given_server="";
+    var state="";
+
+    var entity_classfy_mode = 'local';
+    var seq_lab_mode = 'local';
+    var relation_classfy_mode = 'local';
+
+    var count_new_entity=-1;
+    var count_new_relation=-1;
+    var count_cancled_point=-1;
+    var count_spo_lists=-1;
+    var lock_flag = false;
+
+    var seqlab_flag=false;
+
+    var implicit_relation_flag=false;
+
+    var cursor_timer=-1;
+    var cursor_obj=-1;
+    var cursor_index=0;
+
+    var lists;
+
+    var selected_flag=false;
+
+    keyboard_bind();
+
+    var cursor_auto_run;
+    var cursor_auto_run_flag=false;
+
+    var cut_save_flag=false;
+
+    var screen_size=[window.screen.availHeight,window.screen.availWidth];
+
+    var triple_relation_classfy_list=[];
+    var tokens_2_server="";
+    var tokesn_2_server_index_s=-1;
+    var count_tmp = 0;
+	for(var c in config_entity){
+        var tamplate = "<li><button style=\"background: "+config_entity[c] +";float: left;padding: 0.5em\" onclick=\"set_type('实体_"+c+"')\">"+number_map[(Object.keys(config_entity).length-count_tmp-1)]+":"+c+"</button></li>";
+        var obj =    document.getElementById("entity_type_config");
+        obj.innerHTML = tamplate+obj.innerHTML;
+        count_tmp++;
+    }
+    count_tmp = 0;
+    for(var c in config_relation){
+        var tamplate = "<li><button style=\"background: "+config_relation[c] +";float: left;padding: 0.5em\" onclick=\"set_type('关系_"+c+"')\">"+number_map[(Object.keys(config_relation).length-count_tmp-1)]+":"+c+"</button></li>";
+        // console.log(tamplate);
+        var obj =    document.getElementById("relation_type_config");
+        obj.innerHTML = tamplate+obj.innerHTML;
+        count_tmp++;
+    }
+window.onresize = function(){
+    adjust_position();
+    refresh();
+}
+// qt = null;
+run_mode = 'qt';
+document.addEventListener("DOMContentLoaded", function () {
+        adjust_position();
+        try{
+            new QWebChannel( qt.webChannelTransport, function(channel) {
+                window.pyjs = channel.objects.pyjs;
+            });
+        }
+         catch(err){
+        run_mode = 'web';
+         }
+    });
+function adjust_position(){
+    document.getElementById("CurrentContent").style.width=(window.innerWidth-350)+'px';
+    var console_obj_tmp = document.getElementById("console");
+    console_obj_tmp.style.height=(window.innerHeight-console_obj_tmp.offsetTop-140)+'px';
+}
+function debug(){
+    if(number_input.length==0)return;
+    var tmp=eval(number_input);
+    if(tmp==0) myconsole('spo_global=',spo_global);//output
+    if(tmp==1) myconsole('all_spos_loaded[current_page_index]=',all_spos_loaded[current_page_index]);//output
+    if(tmp==2) myconsole('entity_diction length=',Object.keys(entity_diction).length);
+    if(tmp==3) myconsole('relation_diction length=',Object.keys(relation_diction).length);
+    number_record('clean');
+}
+function cursor_position_prediction(tokens,last_char_index,next_char_index){
+    if(run_mode!='qt') return;
+    var data = {"tokens":tokens,"last_char_index":last_char_index,'label':next_char_index};
+    data = JSON.stringify(data);
+    pyjs.cursor_position_prediction(data,function(y){
+       return;
+    });
+}
+function server_triple_relation_classfy(triple_relation_classfy_list,label,add_delete){
+    if(run_mode!='qt') server_triple_relation_classfy_django(triple_relation_classfy_list,label,add_delete);
+    else{
+        var data = {"sample":triple_relation_classfy_list,'label':label,'add_delete':add_delete};
+        data = JSON.stringify(data);
+        pyjs.server_triple_relation_classfy(data,function(y){
+            y = JSON.parse(y);
+            if(label==-1){//没有给定label，服务器预测；否则直接上传到服务器上去
+                type_choose(false,y['result']);//
+              }
+        });
+    }
+}
+function set_spos_from_server(spos){
+    let prediction = spos['预测值'];
+    for(var j in prediction){
+        let spo_tmp = prediction[j];
+        let page_start = parseInt(all_spos_loaded[current_page_index][0][0]);
+        spo_tmp[0] = parseInt(spo_tmp[0])+page_start+"";
+        spo_tmp[2] = parseInt(spo_tmp[2])+page_start+"";
+        if(query_2dlist(all_spos_loaded[current_page_index],spo_global)==-1)        all_spos_loaded[current_page_index].push(spo_tmp);
+    }
+}
+function seq_labing_to_server(seqlab_flag,sample,labels,add_delete){
+    if(!seqlab_flag)return;
+    if(run_mode!='qt') seq_labing_to_server_django(seqlab_flag,sample,add_delete);
+    else{
+        var data = {"sample":sample};
+        data = JSON.stringify(data);
+        pyjs.seq_labing(data,function(y){
+            y = JSON.parse(y);
+            seq_lab_mode = 'remote';
+            seq_lab = y['seq_lab'];
+            spos_from_server = y['spos'];
+            // set_spos_from_server(spos_from_server);
+            set_labels(seq_lab);
+            // spo_add(spos_from_server);
+        });
+    }
+}
+function to_server(entity,sample,index_s,index_e,tokens,label,add_delete){
+    if(run_mode!='qt') to_server_django(entity,sample,index_s,index_e,tokens,label,add_delete);
+    else{
+        var data = {"sample":sample,"index_s":index_s,"index_e":index_e,"tokens":tokens,"label":label,'add_delete':add_delete};//传输的数据
+        data = JSON.stringify(data)
+        pyjs.entity_classfy(data,function(y){
+            y = JSON.parse(y);
+            if(label!=-1){//标注了新的实体，在当前页面根据匹配进行序列标注，然后直接返回
+                return;
+            }
+            if(Object.keys(entity_diction).length<10){//50个样本内使用传统的编辑距离预测
+                var label_predicted_ed = "服务器不可用";
+                var probability = 0;
+                if(Object.keys(entity_diction).length>2){
+                    var tmp = entity_classfy_local(sample,entity_diction);
+                    label_predicted_ed = tmp[0];
+                    probability = tmp[1];
+                }
+                // myconsole('label_predicted_local',label_predicted_local);
+                type_choose(entity,{"预测值":label_predicted_ed,"可信度":'ED: '+probability});
+            }else{
+                entity_classfy_mode = 'remote';
+                var label_predicted_deep = y['result']["预测值"];
+                var probability = 'DL: '+ y['result']["可信度"];
+                type_choose(entity,{"预测值":label_predicted_deep,"可信度":probability});//服务器预测类别后进入选择窗口；如果添加新样本label!=-1，不显示选择窗口
+            }
+        });
+    }
+}
+function spo_add(spos_from_server){
+
+}
+$("#cut_save_flag").change(function() {
+    if(document.getElementById('cut_save_flag').checked) cut_save_flag=true;
+    else cut_save_flag=false;
+    document.activeElement.blur();
+});
+$("#seqlab_flag").change(function() {
+    if(imported_flag==0){document.getElementById('seqlab_flag').checked=false;return;}
+    if(document.getElementById('seqlab_flag').checked){
+      seqlab_flag=true;
+      if(seqlab_flag&&page_predicted.indexOf(current_page_index)==-1&&all_spos_loaded[current_page_index].length<=1){
+        page_predicted.push(current_page_index);
+        seq_labing_to_server(seqlab_flag,all_samples_loaded[current_page_index],[],'query');
+      }
+      refresh();
+      indicator('off');
+    document.activeElement.blur();
+    }
+    else seqlab_flag=false;
+    document.activeElement.blur();
+});
+$("#cursor_auto_run").change(function() {
+    if(document.getElementById('cursor_auto_run').checked) {
+      cursor_auto_run_flag=true;
+      new_cursor_auto_run();
+    }
+    else {
+      cursor_auto_run_flag=false;
+      clearInterval(cursor_auto_run);//先清除之前的
+
+    }
+    document.activeElement.blur();
+  });
+function new_cursor_auto_run(){
+  if(cursor_auto_run_flag){
+    clearInterval(cursor_auto_run);//先清除之前的
+      cursor_auto_run=setInterval(function(){
+        if(state=='modify_able') cursor_right(true);
+        }, 600);
+    }
+    
+}
+function type_choose(entity_pannel,server_result){
+  state="choosing";
+  var entity_or_relation= entity_pannel==true? '实体':'关系';
+  var result_output=txtselected+'&nbsp&nbsp&nbsp&nbsp';
+  for(var key in server_result){
+    result_output+=key+" : "+server_result[key]+'&nbsp&nbsp&nbsp&nbsp';
+  }
+  type_given_server=server_result['预测值'];
+  var color=eval(server_result['可信度'])>0.7? 'green':'red';
+  if(entity_pannel){
+    document.getElementById('given_by_server_e').innerHTML=result_output;//标签和对应概率
+    document.getElementById('given_by_server_e').style.color=color;//标签和对应概率
+    document.getElementById('entity_type').style.display='block';//显示
+
+  }else{
+    document.getElementById('given_by_server_r').innerHTML=result_output;//标签和对应概率
+    document.getElementById('given_by_server_r').style.color=color;//标签和对应概率
+    document.getElementById('relation_type').style.display='block';//显示
+  }
+  document.getElementById('fade').style.display='block';
+
+}
+function set_type_tradition(entity,label,start_end_in){
+    // start_end = start_end_in;
+    type = label;
+    var current_char_index_tmp = start_end_in[0];
+    var end_char_index_tmp = -1;
+    if(all_labels_loaded[current_page_index][current_char_index_tmp][0]!='O'){
+        var start_end_tmp=start_end_index(current_char_index_tmp,all_labels_loaded[current_page_index]);//当前选中的文本之前的文本是否有标签？
+        if((start_end_tmp[1]-start_end_tmp[0])>(start_end_in[1]-start_end_in[0])){
+            return;
+        }
+    }
+
+    // myconsole(current_char_index_tmp+" "+end_char_index_tmp);
+    all_labels_loaded[current_page_index][current_char_index_tmp]='B_'+type;
+    end_char_index_tmp=Math.max(entity.length+current_char_index_tmp-1,-1);
+    if(current_char_index_tmp<0||end_char_index_tmp<=0)return;
+    for (var j = current_char_index_tmp+1; j<=end_char_index_tmp; j++) {
+        all_labels_loaded[current_page_index][j]='I_'+type;
+    }
+    if(all_labels_loaded[current_page_index][j][0]=='I'){
+        for (var i = j; i<all_labels_loaded[current_page_index].length; i++) {
+            if(all_labels_loaded[current_page_index][i][0]!='I')break;
+            all_labels_loaded[current_page_index][i]='O';
+        }
+    }
+    if(type.indexOf('实体')!=-1) count_new_entity+=1;
+}
+function set_type(type_){
+        // myconsole(type_)
+  type=type_;
+  if(type_=='服务器不可用'){//服务器不可用的情况下按默认选择键，直接关闭选择界面返回
+    type_choose_close();
+    return;
+  }
+
+  if(implicit_relation_flag){//关系不在文本中出现，隐形关系
+    implicit_relation_flag=false;
+
+    if(spo_global.length!=2){
+        myconsole('Error!');//output
+        type_choose_close();
+        return;
+    }
+    var e1=spo_global[0];
+    var e2=spo_global[1];
+    spo_global[0]=e1;
+    spo_global[1]=type;
+    spo_global.push(e2);
+    if(type!=""&&type_given_server!='服务器不可用'){//如果服务器可用，发送新样本给服务器
+
+    // if(type!=""&type_given_server!='服务器不可用'){
+    // if(type!=""&type!=type_given_server){
+        var exist_index=query_2dlist(all_spos_loaded[total_char_index_2_relative_index(parseInt(spo_global[0]))[0]],spo_global);
+        if(exist_index!=-1)  server_triple_relation_classfy(triple_relation_classfy_list,type,'delete');
+        else server_triple_relation_classfy(triple_relation_classfy_list,type,'add');
+    }else{
+        var tp = triple_relation_classfy_list;
+        var triple_relation_classfy_list_tmp = ['#',tp[0],tp[1],tp[4],tp[5],tp[8].join('')];
+        relation_diction[triple_relation_classfy_list_tmp.join('  ')] = type;
+    }
+    save_spo();
+    // myconsole('关闭关系类型选择框');//debug
+    type_choose_close();
+    return ;
+  }
+  if(txtselected!=""){
+
+      // var char=all_samples_loaded[current_page_index][current_char_index]//old_debug
+      var char=all_samples_loaded[current_page_index][start_end[0]];
+      current_char_index=start_end[0];
+      if(char!=txtselected[0]){//点击起始位置修正
+          current_char_index-=txtselected.indexOf(char);
+      }
+       var start_end_tmp=start_end_index(current_char_index,all_labels_loaded[current_page_index]);//当前选中的文本之前的文本是否有标签？
+
+      var label_origin=all_labels_loaded[current_page_index][start_end_tmp[0]];
+      if(label_origin[0]=='B')label_origin=label_origin.slice(2);
+      else label_origin="";
+      if(start_end_tmp[0]!=-1&&start_end_tmp[0]!=start_end[0]) for(var i =start_end_tmp[0];i<start_end[0];i++)all_labels_loaded[current_page_index][i]='O';//清楚选中文本之前的标签
+      var sample_x=all_samples_loaded[current_page_index][current_char_index];//sample_x用于提交服务器
+      all_labels_loaded[current_page_index][current_char_index]='B_'+type;
+
+      end_char_index=Math.max(txtselected.length+current_char_index-1,-1);
+      if(current_char_index<0||end_char_index<0)return;
+      for (var j = current_char_index+1; j<=end_char_index; j++) {
+          sample_x+=all_samples_loaded[current_page_index][j];//sample_x用于提交服务器
+          all_labels_loaded[current_page_index][j]='I_'+type;
+      }
+      cursor_index=end_char_index;
+      if(type.indexOf('实体')!=-1) count_new_entity+=1;
+      // else if(type.indexOf('关系')!=-1) count_new_relation+=1;
+
+      for(var j = end_char_index+1;j<all_labels_loaded[current_page_index].length;j++){//选中修改后，处理之前标记的结果
+          if(all_labels_loaded[current_page_index][j][0]!="I")break
+              all_labels_loaded[current_page_index][j]="O";
+      }
+      for(var j = end_char_index+1;j<all_labels_loaded[current_page_index].length;j++){//选中修改后，处理之前标记的结果
+          if(all_labels_loaded[current_page_index][j][0]!="I")break
+              all_labels_loaded[current_page_index][j]="O";
+      }
+      // spo_global=[];
+      // refresh();
+  }else if(start_end[0]!=-1){//直接按下s或f，修改两个字符的标签
+    var label_origin="";
+          if(start_end[1]==-1){
+              var sample_x=all_samples_loaded[current_page_index][start_end[0]];//sample_x用于提交服务器
+              sample_x+=all_samples_loaded[current_page_index][start_end[0]+1];//sample_x用于提交服务器
+
+              all_labels_loaded[current_page_index][start_end[0]]='B_'+type;
+              all_labels_loaded[current_page_index][start_end[0]+1]='I_'+type;
+              cursor_index=start_end[0]+1;
+              if(type.indexOf('实体')!=-1) count_new_entity+=1;
+              // else if(type.indexOf('关系')!=-1) count_new_relation+=1;
+          }else{
+              var sample_x=all_samples_loaded[current_page_index][start_end[0]];//sample_x用于提交服务器
+              all_labels_loaded[current_page_index][start_end[0]]='B_'+type;
+              for (var j = start_end[0]+1; j<=start_end[1]; j++) {
+                  all_labels_loaded[current_page_index][j]='I_'+type;
+                  sample_x+=all_samples_loaded[current_page_index][j];//sample_x用于提交服务器
+
+              }
+              cursor_index=start_end[1];
+              if(type.indexOf('实体')!=-1) count_new_entity+=1;
+              // else if(type.indexOf('关系')!=-1) count_new_relation+=1;
+      }
+    }
+  type_choose_close();
+    // if(type!=""&type_given_server!='服务器不可用'&(type!=type_given_server)||(type!=label_origin)){
+    // if(type!=""&type_given_server!='服务器不可用'){
+        // to_server(true,sample_x,tokesn_2_server_index_s,tokesn_2_server_index_s+sample_x.length, tokens_2_server,type_given_server,'delete');
+    // if(label_origin.length!=0)  {
+        if(label_origin.length!=0&&label_origin!=type_given_server)  {
+
+        to_server(true,sample_x,tokesn_2_server_index_s,tokesn_2_server_index_s+sample_x.length, tokens_2_server,label_origin,'delete');
+        myconsole('删除原有标签的');//output
+        myconsole(sample_x);//output
+        myconsole(label_origin);//output
+    }
+    to_server(true,sample_x,tokesn_2_server_index_s,tokesn_2_server_index_s+sample_x.length, tokens_2_server,type,'add');
+    entity_diction[sample_x] = type;//立即添加词条，提高反应速度
+
+    // to_server(true,sample_x,tokens_2_server,type);
+
+    if(seq_lab_mode=='local'&&seqlab_flag){
+        // myconsole('当前页面即时更新序列标注！');//devs
+        var sample_tmp = [];
+        var sample = all_samples_loaded[current_page_index];
+        for(var i in sample){
+            if(sample[i]=='_换行符_')sample_tmp.push('\n');
+            else sample_tmp.push(sample[i]);
+        }
+        sample_tmp = sample_tmp.join('');
+        seq_label_local(sample_tmp,entity_diction);
+    }
+  txtselected="";
+  spo_global=[];
+  refresh();
+}
+function save_spo(){
+            //得出实际存储位置的索引值 start
+            var page_index2store=total_char_index_2_relative_index(spo_global[0])[0];
+           //判断是否为从前一页面开始的三元组，得出实际存储位置的索引值 end     
+            var exist_index=query_2dlist(all_spos_loaded[page_index2store],spo_global);
+            if(exist_index==-1){//是否已经存在             
+                  all_spos_loaded[page_index2store].push(spo_global);
+                  count_spo_lists+=1;
+            }else{
+                  all_spos_loaded[page_index2store].splice(exist_index,1);
+           }
+
+
+            //处理跨页面三元组  start
+            for(var i=1;i<spo_global.length;i++){
+                if(spo_global[i]==undefined){
+                    myconsole('spo_global列表中出现undefined异常');//output
+                    spo_global=[];
+                    break;
+                }
+                if(spo_global[i][0]=='关')continue;//隐性关系
+                var sample_overlap_index=total_char_index_2_relative_index(spo_global[i])[0];
+                var exist_index_other_page=query_2dlist(all_spos_loaded[sample_overlap_index],spo_global);
+                if(exist_index==-1&&exist_index_other_page==-1){//没有存储过的三元组
+                    all_spos_loaded[sample_overlap_index].push(spo_global);
+                }else if(exist_index!=-1&&exist_index_other_page!=-1){//储存过的三元组，进行删除
+                  all_spos_loaded[sample_overlap_index].splice(exist_index_other_page,1);
+                }
+            }
+          //处理跨页面三元组  end
+          spo_global=[];
+          indicator('off');
+          clean_rectangle();
+          refresh();
+           //恢复之前锁定元素  start
+            if(sp_lock.length!=0){
+                  spo_global=[];
+                for(var i in sp_lock){
+                  var se_tmp=start_end_index(total_char_index_2_relative_index(parseInt(sp_lock[i]))[1],all_labels_loaded[current_page_index]);
+                  if(i==1&&all_labels_loaded[current_page_index][se_tmp[0]][2]=='实')break;//两个实体被锁定，只取第一个锁定的实体
+                  render_rectangle(se_tmp);
+                  spo_global.push(sp_lock[i]);
+                }
+               indicator('on','已锁定');
+            }else{
+              spo_global=[];
+              indicator('off');
+            }//恢复之前锁定元素 end
+}
+function set_labels(labels_result){
+  var labels_tmp=labels_result['预测值'];
+  var probability_tmp=labels_result['可信度'];
+  if(labels_tmp.length!=(all_labels_loaded[current_page_index].length)){
+    myconsole('服务器的标签结果长度存在问题！');//output
+    myconsole(labels_tmp.length);//output
+    myconsole(all_labels_loaded[current_page_index].length);//output
+    return;
+  }else
+  {
+   probability=[];
+  for(var i=0;i<labels_tmp.length;i++){
+    // if(labels_tmp[i][5]=='规')
+    if(eval(probability_tmp[i])>0.4) {//根据置信度调整标签
+      all_labels_loaded[current_page_index][i]=labels_tmp[i];
+      // probability.push(parseInt(eval(probability_tmp[i])*10));
+    }
+    else continue;
+  }
+
+  }
+  for(var i=0;i<labels_tmp.length-1;i++){//再次检查根据置信度调整后的标签连续性
+    var labels_to_check=all_labels_loaded[current_page_index];
+    //单独出现I标签
+    if(i==0&&labels_to_check[i][0]=="I")all_labels_loaded[current_page_index][i]='O';
+    if(labels_to_check[i][0]=="O"&&labels_to_check[i+1][0]=="I")all_labels_loaded[current_page_index][i+1]='O';
+  }
+  refresh()//等待服务器结果后进行刷新，不可删除
+}
+function type_choose_close(){
+   document.getElementById('entity_type').style.display='none';
+   document.getElementById('relation_type').style.display='none';
+   document.getElementById('fade').style.display='none';
+   state="modify_able";
+   txtselected="";
+   if(!lock_flag){
+    spo_global=[];
+    }
+   triple_relation_classfy_list=[];
+   clean_rectangle();
+   refresh();
+   // indicator('off');
+}
+function jump(vim){
+    if(state!="modify_able")return;
+    back_chars = undefined;
+    back_labels = undefined;
+    back_spos = undefined;
+    if(vim==false){
+        obj = document.getElementById("jump");
+        current_page_index=parseInt(obj.value);
+    }else{
+        if(number_input.length==0)return;
+        var tmp=eval(number_input);
+
+      current_page_index=tmp<0?0:tmp;
+      current_page_index=current_page_index>=all_samples_loaded.length?all_samples_loaded.length-1:current_page_index;
+    }
+    spo_global=[];
+    sp_lock=[];
+    change_cursor_index(0);
+    number_record('clean');
+    if(seqlab_flag&&page_predicted.indexOf(current_page_index)==-1&&all_spos_loaded[current_page_index].length<=1){
+    	//开启智能标注 未标注的页面 没有标注过三元组的
+      page_predicted.push(current_page_index);
+      seq_labing_to_server(seqlab_flag,all_samples_loaded[current_page_index],[],'query');
+    }
+
+    document.getElementById('console').value="终端信息：";
+    refresh();
+    indicator('off');
+    document.activeElement.blur();
+    //初始化视野
+    var position = cursor_obj.getBoundingClientRect();
+    view_adjust(position);
+}
+function minDistance(s1, s2) {
+    var len1 = s1.length;
+    var len2 = s2.length;
+    let matrix = [];
+
+    for (let i = 0; i <= len1; i++) {
+        // 构造二维数组
+        matrix[i] = new Array();
+        for (let j = 0; j <= len2; j++) {
+            // 初始化
+            if (i == 0) {
+                matrix[i][j] = j;
+            } else if (j == 0) {
+                matrix[i][j] = i;
+            } else {
+                // 进行最小值分析
+                let cost = 0;
+                if (s1[i - 1] != s2[j - 1]) { // 相同为0，不同置1
+                    cost = 1;
+                }
+                const temp = matrix[i - 1][j - 1] + cost;
+
+                matrix[i][j] = Math.min(matrix[i - 1][j] + 1, matrix[i][j - 1] + 1, temp);
+            }
+        }
+    }
+    return matrix[len1][len2]; //返回右下角的值
+}
+
+// minDistance('jary','jerry') // 2
+function selecte(){
+    if(state=='choosing'){
+        set_type(type_given_server);
+        type_given_server="";
+        return;
+    }
+    if(selected_flag||sp_lock.length!=0||spo_global.length!=0){//取消已选中，锁定的元素，清楚选中的三元组
+        indicator('off');
+        selected_flag=false;
+        lock_flag=false;
+        txtselected="";
+        sp_lock=[];
+        spo_global=[];
+        clean_lines();
+        clean_rectangle();
+    }else{
+        selected_flag=true;
+        indicator('on');
+        obj_mousedown=lists[cursor_index];
+        render_rectangle([cursor_index,cursor_index]);
+    }
+}
+function next(key_triger){
+    if(state=="choosing"){
+      spo_global=[];
+      type_choose_close();
+      return;
+    }
+    if(state!="modify_able")return;
+    seq_labing_to_server(seqlab_flag,all_samples_loaded[current_page_index],all_labels_loaded[current_page_index],'add');
+    if(number_input!="") var page_change=eval(number_input);
+    else var page_change=1;
+    if((current_page_index+page_change)>total){//超出范围
+        current_page_index=total;
+        cursor_index=all_samples_loaded[current_page_index].length-1;
+    }else{
+      cursor_index=0;
+      current_page_index+=page_change;
+    }
+    number_record('clean');
+    if(seqlab_flag&&page_predicted.indexOf(current_page_index)==-1&&all_spos_loaded[current_page_index].length<=1){
+      page_predicted.push(current_page_index);//记录当前被服务器预测过的页码
+      seq_labing_to_server(seqlab_flag,all_samples_loaded[current_page_index],[],'query');
+    }
+    document.getElementById('console').value="终端信息：";
+    refresh();
+    document.activeElement.blur();
+}
+function previous(key_triger){
+    if(state=='choosing'){
+      number_record('11');
+      return;
+    }
+    if(state!="modify_able")return;
+    if(number_input!="") var page_change=eval(number_input);
+    else var page_change=1;
+    if((current_page_index-page_change)<0){//超出范围
+        current_page_index=0;
+        cursor_index=0;
+    }else{
+    current_page_index-=page_change;
+    cursor_index=all_samples_loaded[current_page_index].length-1;
+
+    }
+//    myconsole('cursor_index='+cursor_index);//dev
+    number_record('clean');
+    if(seqlab_flag&&page_predicted.indexOf(current_page_index)==-1&&all_spos_loaded[current_page_index].length<=1){
+      page_predicted.push(current_page_index);
+      seq_labing_to_server(seqlab_flag,all_samples_loaded[current_page_index],[],'query');
+    }
+    document.getElementById('console').value="终端信息：";
+    refresh();
+    document.activeElement.blur();
+}
+
+document.onkeydown = function(ev){
+    var e = ev || event;
+    //屏蔽空格页面下滑
+    if(e.keyCode == 32){
+        e.returnValue = false;
+      }
+      //屏蔽ctl+g
+    if (e.ctrlKey && e.keyCode==71){
+      return false;
+    }
+    //屏蔽ctl+p
+    if (e.ctrlKey && e.keyCode==80){
+      return false;
+    }
+}
+// function undo_last_delete(){
+//     if(back_chars!=undefined){
+
+//         all_samples_loaded = [];
+//         all_labels_loaded = [];
+//         all_spos_loaded = [];
+//     for(var i in back_chars){
+//         all_samples_loaded.push(back_chars[i].slice(0));
+//         all_labels_loaded.push(back_labels[i].slice(0));
+//         all_spos_loaded.push(back_spos[i].slice(0));
+//     }
+//         back_chars = undefined;
+//         back_labels = undefined;
+//         back_spos = undefined;
+//     }else return;
+//     refresh();
+
+// }
+function insert_char(){
+    var char_2_insert = document.getElementById("insert_input").value;
+    if(char_2_insert.length==0 || char_2_insert.length>2) char_2_insert=' ';
+    char_2_insert = char_2_insert=='\\n'? '_换行符_':char_2_insert;//界面显示和存储转换
+    // if(char_2_insert.length>1){
+    //     alert("只支持单个字符的插入！");
+    //     return;
+    // }
+    let total_char_index_tmp=total_char_index_cal(current_char_index);
+    let sententce = all_samples_loaded[current_page_index];
+    for(var i=current_page_index+1;i<all_spos_loaded.length;i++)
+        all_spos_loaded[i][0][0] = parseInt(all_spos_loaded[i][0][0])+1+'';
+    //调整SPO的头尾实体指标 Start
+    //先调整，后面会检查索引值是否对应B开头的标签进行删除
+    for(var i=0;i<all_spos_loaded.length;i++){
+        if(all_spos_loaded[i].length>1)
+            for(var j=1;j<all_spos_loaded[i].length;j++){
+                all_spos_loaded[i][j][0] = parseInt(all_spos_loaded[i][j][0])>=total_char_index_tmp? (parseInt(all_spos_loaded[i][j][0])+1)+'':all_spos_loaded[i][j][0];
+                all_spos_loaded[i][j][2] = parseInt(all_spos_loaded[i][j][2])>=total_char_index_tmp? (parseInt(all_spos_loaded[i][j][2])+1)+'':all_spos_loaded[i][j][2];
+            }   
+    }
+    // 调整SPO的头尾实体指标 End
+    // 修改文本 Start
+    sententce.splice(current_char_index,0,char_2_insert);
+    // all_samples_loaded[current_page_index] = sententce.concat(sententce.slice(current_char_index,sententce.length));
+    // 修改文本 End
+    // 修改标签 Start
+    var label_insert = 'O';
+    // if(current_char_index==0){
+    //     var label_next = all_labels_loaded[current_page_index][1];
+    //     if(label_next!='O'){
+    //         label_insert = 'B'+label_next.slice(1);
+    //         all_labels_loaded[current_page_index][1] = 'I'+label_next.slice(1);
+    //     }
+    // }else{
+    //     var label_pre = all_labels_loaded[current_page_index][current_char_index-1];
+    //     label_insert = label_pre;
+    //     if(label_pre[0]=='B'){
+    //         label_insert = 'I'+label_pre.slice(1);
+    //     }
+    // }
+    all_labels_loaded[current_page_index].splice(current_char_index,0,label_insert);
+    //修改标签 End
+    document.activeElement.blur();
+    refresh();
+}
+function delete_char(){
+    let total_char_index_tmp=total_char_index_cal(current_char_index);
+    let char_2_delete = lists[current_char_index].innerHTML;
+    let sententce = all_samples_loaded[current_page_index];
+    document.getElementById('insert_input').value = char_2_delete;
+    char_2_delete = char_2_delete=='\n'? '_换行符_':char_2_delete;//界面显示和存储转换
+    back_chars = [];
+    back_labels = [];
+    back_spos = [];
+    for(var i in all_samples_loaded){
+        back_chars.push(all_samples_loaded[i].slice(0));
+        back_labels.push(all_labels_loaded[i].slice(0));
+        var tmp=[];
+        for(var j in all_spos_loaded[i]){
+            tmp.push(all_spos_loaded[i][j].slice(0));
+        }
+        back_spos.push(tmp);
+    }
+    for(var i=current_page_index+1;i<all_spos_loaded.length;i++)
+        all_spos_loaded[i][0][0] = parseInt(all_spos_loaded[i][0][0])-1+'';
+    //调整SPO的头尾实体指标 Start
+    //先调整，后面会检查索引值是否对应B开头的标签进行删除
+    for(var i=0;i<all_spos_loaded.length;i++){
+        if(all_spos_loaded[i].length>1)
+            for(var j=1;j<all_spos_loaded[i].length;j++){
+                var drop_flag = false;
+                drop_flag = parseInt(all_spos_loaded[i][j][0])==total_char_index_tmp;
+                drop_flag |= parseInt(all_spos_loaded[i][j][0])==total_char_index_tmp;
+                if(drop_flag){
+                    all_spos_loaded[i].splice(j,1);
+                }
+                else{
+                    if(parseInt(all_spos_loaded[i][j][2])>total_char_index_tmp){
+                        all_spos_loaded[i][j][2] = (parseInt(all_spos_loaded[i][j][2])-1)+'';
+                    }
+                    if(parseInt(all_spos_loaded[i][j][0])>total_char_index_tmp){
+                        all_spos_loaded[i][j][0] = (parseInt(all_spos_loaded[i][j][0])-1)+'';
+                    }
+                }
+            }   
+
+    }
+    //调整SPO的头尾实体指标 End
+    //修改文本 Start
+    sententce.splice(current_char_index,1);
+    all_samples_loaded[current_page_index] = sententce;
+    // all_samples_loaded[current_page_index] = sententce.concat(sententce.slice(current_char_index+1,sententce.length));
+    //修改文本 End
+    //修改标签 Start
+    all_labels_loaded[current_page_index].splice(current_char_index,1);
+    //修改标签 End
+    document.activeElement.blur();
+    selected_flag=false;
+    spo_global = [];
+    refresh();
+}
+function backspace(){
+    if(number_input.length>0)number_input=number_input.substring(0,number_input.length-1);
+    document.getElementById('number_input').innerHTML=number_input;
+
+}
+function jump_2_char_total_index(){
+  if(state!="modify_able"||number_input.length==0)return;
+  back_chars = undefined;
+  back_labels = undefined;
+  back_spos = undefined;
+  var total_char_index_tmp=eval(number_input);
+  var result_tmp=total_char_index_2_relative_index(total_char_index_tmp);
+  if(result_tmp[0]==-1)return;
+  current_page_index=result_tmp[0];
+  cursor_index=result_tmp[1];
+  refresh();
+  number_record('clean');
+}
+function number_record(number_char){//记录输入的数字，并判断是否在选择页面
+    if(isNaN(number_char))number_input="";
+    else number_input+=number_char;
+    document.getElementById('number_input').innerHTML=number_input;
+    if(state=="choosing"){
+      option_choosed=eval(number_input);
+      var testobj=document.getElementById('entity_type');
+      if(testobj.style.display=='none') testobj=document.getElementById('relation_type');
+      var options = Array.from(testobj.querySelectorAll('button'));
+      if(option_choosed>=0& option_choosed<options.length-2){//避免误触发取消和默认
+        options[option_choosed].click();
+      }
+      number_input="";
+      return;
+    }
+}
+function keyboard_spo(){
+  if(state!="modify_able")return;
+    click_handle(cursor_index,true);
+}
+function forward_end(){
+    if(state!="modify_able")
+    {
+        number_record('2');
+        return;
+    }
+    var cursor_next=cursor_index;
+    //当前位置的标签是’O‘
+    var condition1=all_labels_loaded[current_page_index][cursor_next][0]=='O';
+    //存在下一个位置且当前位置下一个标签是’O‘或者’B'
+    var condition2=(cursor_next+1)<lists.length&&['O','B'].indexOf(all_labels_loaded[current_page_index][cursor_next+1][0])!=-1;
+    if((cursor_next+1<lists.length)){
+        if(condition1||condition2){
+            for(var i=cursor_next+1;i<lists.length;i++)if(all_labels_loaded[current_page_index][i][0]=='B') break
+            var begin_tmp=i==lists.length? i-1:i;
+        }else var begin_tmp=cursor_next;
+    }
+    else var begin_tmp=lists.length-1;
+    var location_tmp=start_end_index(begin_tmp,all_labels_loaded[current_page_index])[1];
+    cursor_next= location_tmp>=0? location_tmp:cursor_next;
+    change_cursor_index(cursor_next);
+    cursor();
+}
+
+function forward(){
+    if(state=='choosing'){
+      number_record('14');
+      return;
+    }
+    if(state!="modify_able")return;
+    if(cursor_index+1>=lists.length )next(true);
+    var cursor_next=cursor_index;
+    for(var i=cursor_next+1;i<lists.length;i++)if(all_labels_loaded[current_page_index][i][0]=='B') break
+    cursor_next=i==lists.length? i-1:i;
+    // cursor_position_prediction(all_samples_loaded[current_page_index],last_char_index_queue[1],cursor_next);
+    last_char_index_queue.push(cursor_next);
+    last_char_index_queue.shift();
+    change_cursor_index(cursor_next);
+    cursor();
+}
+function back(){
+    if(state!="modify_able")return;
+    if(cursor_index-1<0)previous(true);
+    var cursor_next=cursor_index;
+    for(var i=cursor_next-1;i>0;i--)if(all_labels_loaded[current_page_index][i][0]=='B') break
+    cursor_next=i<0? 0:i;
+    change_cursor_index(cursor_next);
+    cursor();
+}
+function cursor_down(){
+    if(state!="modify_able")return;
+    var cursor_next=cursor_index;
+    if(number_input!="") var line_change=eval(number_input);
+    else var line_change=1;
+    number_input="";
+    document.getElementById('number_input').innerHTML="";
+    for(var j=0;j<line_change;j++){
+        var position=lists[cursor_next].getBoundingClientRect();
+
+        var distance=[];
+        for(var i=cursor_next;i<lists.length;i++){
+            var position_tmp=lists[i].getBoundingClientRect();
+            if(Math.abs(position.top-position_tmp.top)<10){
+                distance.push(9999);
+                continue;
+            }
+            distance.push(Math.abs(position_tmp.top-position.top)+Math.abs(position_tmp.right-position.right));
+        }
+        if(distance[distance.length-1]==9999){
+            cursor_index=cursor_index;
+            next(true);
+            return;
+        }else   cursor_next+=distance.indexOf(Math.min.apply(null,distance));
+    }
+    change_cursor_index(cursor_next);
+    cursor();
+}
+function cursor_up(){
+    if(state!="modify_able")return;
+     var cursor_next=cursor_index;
+    if(number_input!="") var line_change=eval(number_input);
+    else var line_change=1;
+    number_input="";
+    document.getElementById('number_input').innerHTML="";
+    for(var j=0;j<line_change;j++){
+        var position=lists[cursor_next].getBoundingClientRect();
+
+        var distance=[];
+        for(var i=cursor_next;i>0;i--){
+            var position_tmp=lists[i].getBoundingClientRect();
+            if(Math.abs(position.top-position_tmp.top)<10){
+                distance.push(9999);
+                continue;
+            }
+            distance.push(Math.abs(position_tmp.top-position.top)+Math.abs(position_tmp.right-position.right));
+
+        }
+        if(cursor_next==0||distance[distance.length-1]==9999){
+            cursor_index=cursor_index;
+
+            previous(true);
+            return;
+        }
+        cursor_next-=distance.indexOf(Math.min.apply(null,distance));
+    }
+    change_cursor_index(cursor_next);
+    cursor();
+}
+function cursor_left_twice(){
+    if(state=='choosing'){
+        number_record('16');
+        return;
+    }
+    cursor_left();
+    cursor_left();
+}
+function cursor_left(){
+    if(state=='choosing'){
+        number_record('17');
+        return;
+    }
+    if(state!="modify_able")return;
+
+    var cursor_next=cursor_index;
+    if(number_input!="") cursor_next-=eval(number_input);
+    else cursor_next-=1;
+    number_input="";
+    document.getElementById('number_input').innerHTML="";
+    if(cursor_next<0){
+        previous(true);
+        return;
+    }
+    change_cursor_index(cursor_next);
+    cursor();
+}
+function cursor_right_twice(){
+  cursor_right();
+  cursor_right();
+}
+function cursor_right(auto_flag=false){
+    if(state!="modify_able")return;
+    var cursor_next=cursor_index;
+    if(number_input!="") cursor_next+=eval(number_input);
+    else cursor_next+=1;
+    number_input="";
+    document.getElementById('number_input').innerHTML="";
+    if(cursor_next>=lists.length){
+        next(true);
+        return;
+    }
+    change_cursor_index(cursor_next);
+    cursor();
+}
+
+function start_end_index(index,label){
+    if(label==undefined){
+        myconsole('start_end_index 没有给定label！');//output
+    }
+    // myconsole(index,label);//debugs
+    var start_index=-1;
+    var end_index=-1;
+    if(index<0||index>label.length)return[-1,-1];
+    if(label[index][0]=="O"){
+        if(selected_flag) return [index,index];
+        else return [index,-1];
+    }
+    if(label[index][0]=="B"){//刚好index是实体（关系）的起点索引，只需寻找结尾索引
+        var start_index=index;
+        for(var i=index+1;i<label.length;i++)if(label[i][0]!="I")break;
+        var end_index=i-1;
+        return [start_index,end_index];
+    }else{//index位于中间，先寻左边的起点索引，再寻找右边的结尾索引
+            for(var i=index-1;i>0;i--)if(label[i][0]!="I")break;
+            if(i==0&&label[i][0]!="B"){
+                alert(total_char_index+"处数据存在问题，找不到标记起始");
+                // return [-1,-1];
+            }
+
+            start_index=i<0? 0:i;
+            for(var i=index+1;i<label.length;i++){
+                if(label[i][0]!="I")break;
+            }
+            end_index=i-1;
+            return [start_index,end_index];
+        }
+}
+function view_adjust(position){
+    var testobj=document.getElementById('CurrentContent');
+    if(position.y>0.66*screen_size[0]){
+        document.documentElement.scrollTop+=(position.y-parseInt(0.5*screen_size[0]));
+    }
+    if(position.y<0.33*screen_size[0]){
+        document.documentElement.scrollTop-=(parseInt(0.5*screen_size[0])-position.y);
+    }
+}
+function cursor(){
+    new_cursor_auto_run();
+    cursor_obj=lists[cursor_index];
+    // window.location.hash="#span"+cursor_index;
+    try{
+      var position=cursor_obj.getBoundingClientRect();
+    }
+    catch(err){
+      myconsole('异常!');//output
+      // myconsole()
+      myconsole(cursor_index);//output
+      myconsole('置为0');//output
+      cursor_index=0;
+      return;
+    }
+    //跟随光标调整视野
+    view_adjust(position);
+
+    //闪烁光标
+    if(cursor_timer!=-1)clearInterval(cursor_timer);
+    cursor_timer=setInterval("flash(cursor_obj)",400);
+
+    //空格选中文本
+    if(selected_flag){
+        obj_mouseup=lists[cursor_index];
+        // var start_end_tmp=[lists.indexOf(obj_mousedown),lists.indexOf(obj_mouseup)];
+        txtselected="";
+        for(var i=lists.indexOf(obj_mousedown);i<=cursor_index;i++)txtselected+=lists[i].innerHTML;
+        if(lists.indexOf(obj_mouseup)<lists.indexOf(obj_mousedown)){
+            selected_flag=false;
+            indicator('off');
+            clean_rectangle();
+            return;
+        }
+        start_end=[lists.indexOf(obj_mousedown),lists.indexOf(obj_mouseup)];
+        current_char_index=start_end[0];
+        end_char_index=start_end[1];
+        clean_rectangle();
+        render_rectangle(start_end);
+        return;
+    }
+
+    //按照光标位置改变current_char_index
+    current_char_index=cursor_index;
+    bottom_display(current_char_index);
+    clean_lines();
+    if(spo_need_display.length!=0){
+        for(var spo in spo_need_display){
+            var page_index_tmp = total_char_index_2_relative_index(parseInt(spo_need_display[spo]));
+            if(page_index_tmp[0]==current_page_index) outline_triple(page_index_tmp[1]);
+        }
+        spo_need_display = [];
+    }
+    if(spo_global.length==0)outline_triple(current_char_index);
+}
+function outline_triple(current_char_index){
+    var start_end_tmp=start_end_index(current_char_index,all_labels_loaded[current_page_index]);
+    if(lists[start_end_tmp[0]].Id!=undefined){
+        var top_y_used_list = [];
+        var relations_tmp=lists[start_end_tmp[0]].Id.split(';');
+        var pos_x_drawed = [];
+        var offset_h_step = 40;
+        var offset_w_step = 2;
+        for(var re in relations_tmp){
+            var spo_tmp = relations_tmp[re].split(',');
+
+            var h_offset = re*offset_h_step;//上到下显示切换时，重置高度偏移分量
+            var w_offset = re*offset_w_step ;
+            var pos = [];
+            // draw_line([100,200],[300,400]);
+            for(var j=0;j<spo_tmp.length-1;j++){
+                if(spo_tmp[j][0]=='关' || j==1){
+                    //特定颜色
+                    continue;
+                }
+                var page_index_tmp = total_char_index_2_relative_index(parseInt(spo_tmp[j]));
+                if(page_index_tmp[0]==current_page_index){
+                    var geo = lists[page_index_tmp[1]].getBoundingClientRect();
+                    pos.push(geo.left);
+                    pos.push(geo.top);
+                }else if(page_index_tmp[0]>current_page_index){
+                    pos.push(0);//Right side,odd
+                    pos.push(-888);
+                    spo_need_display.push(spo_tmp[j]);
+                }else if(page_index_tmp[0]<current_page_index){
+                    pos.push(-888);
+                    pos.push(0);//Left side
+                    spo_need_display.push(spo_tmp[j]);
+                }
+                
+                // if(page_index_tmp[0]==current_page_index){
+                    // render_rectangle(start_end_index(page_index_tmp[1],all_labels_loaded[current_page_index]),3,style='outset');
+                // }
+            }
+            while(pos_x_drawed.indexOf(pos[2])!=-1) pos[2]+=10;//x
+            while(pos_x_drawed.indexOf(pos[0])!=-1) pos[0]+=10;//x
+            top_y_used_list.push(draw_line([pos[0],pos[1]],[pos[2],pos[3]], 60 ,offset_h_step,geo.height,top_y_used_list,spo_tmp[3]+':'+spo_tmp[1],config_relation[spo_tmp[1]]));
+            pos_x_drawed.push(pos[2]);
+            pos_x_drawed.push(pos[0]);
+        }
+    }
+}
+function create_arrow(direction,color="#f00",left,top){//0-3:up down left right
+    var arrow = document.createElement('div');
+    arrow.className = 'lines';
+    arrow.style.position = 'absolute';
+    
+    arrow.style.top = top+"px";
+    arrow.style.left = (left-6)+"px";
+    if(direction==0){//up
+        arrow.style.width = "4px";
+        arrow.style.height = "0px";
+        arrow.style.borderBottom = '15px solid '+color;
+        arrow.style.borderLeft = '5px solid transparent';
+        arrow.style.borderRight = '5px solid transparent';
+    }else if(direction==1){//down
+        arrow.style.width = "4px";
+        arrow.style.height = "0px";
+        arrow.style.borderTop = '15px solid '+color;
+        arrow.style.borderLeft = '5px solid transparent';
+        arrow.style.borderRight = '5px solid transparent';
+    }else if(direction==2){//left
+        arrow.style.width = "0px";
+        arrow.style.height = "4px";
+        arrow.style.borderRight = '15px solid '+color;
+        arrow.style.borderTop = '5px solid transparent';
+        arrow.style.borderBottom = '5px solid transparent';    
+    }else if(direction==3){//right
+        arrow.style.width = "0px";
+        arrow.style.height = "4px";
+        arrow.style.borderLeft = '15px solid '+color;
+        arrow.style.borderTop = '5px solid transparent';
+        arrow.style.borderBottom = '5px solid transparent';    
+    }
+    arrow.style.zIndex = 999;
+    return arrow
+}
+function draw_line(pos1,pos2,h1 = 60,offset_h_step=1,h_char_obj = 0,top_y_used_list=[],label='',color = ''){
+    /*
+     * pos1,pos1: pos1 direct to pos2
+     * h1: default distance between label and char
+     * offset_h_step: for two lines, distance of their label
+     * h_char_obj: height of the char object, used to correcte the location of the label when the line need to be displayed under the char
+     * top_y_used_list: top y used list, to seperate the labels
+     * label: label to display
+     * return this draw_line used top y
+            ________l2___________
+        l1  pos1_line1          pos2_line2
+            |                   | 
+h_for_l1    |                   |  l3
+            |                   pos2_in    h_for_l3
+            pos1_in                
+    Attention:
+        1. l1.top = l2.top = l3.top
+        2. l2.width = abs(pos1.x-pos2.x)
+        3. top_y = min(pos1.y,pos2.y)
+        4. Dont confuse with pos1_in with pos1_line1
+    */
+    // myconsole('=========================');//dev
+    // myconsole(pos1,pos2,h1,offset_h_step,h_char_obj);//dev
+    // myconsole('top_y_used_list=',top_y_used_list);//dev
+    var min_w = 16*label.length;
+    var line1_obj = document.createElement('div');
+    var line_label_obj = document.createElement('div');
+    var line3_obj = document.createElement('div');
+    line1_obj.className = 'lines';
+    line_label_obj.className = 'lines';
+    line3_obj.className = 'lines';
+
+    if(color==""){//未指定要显示的颜色，随即选择
+        var str = "0123456789abcdef";
+        for(var i=0;i<2;i++) color+=str.charAt(Math.ceil(Math.random()*(str.length-1)));
+    }
+    // myconsole(color);//dev
+    var h_for_l1 = 1;
+    var h_for_l3 = 1;
+
+    var situation = '';//根据不同的situation创建相应的箭头
+    if(pos1[1]<0){//e1_right
+        pos1[1] = pos2[1];
+        pos1[0] = pos2[0] + 150;
+        situation = 'e1_right';
+    }
+    else if(pos2[1]<0){//e2_right
+        pos2[1] = pos1[1];
+        pos2[0] = pos1[0] + 150;
+        h_for_l3 = 0;
+        situation = 'e2_right';
+        
+    }else if(pos1[0]<0){//e1_left
+        pos1[1] = pos2[1] ;
+        pos2[0] += 0.5*h_char_obj;
+        pos1[0] = pos2[0] - 100  ;
+        h_for_l1 = 0;
+        situation = 'e1_left';
+    }else if(pos2[0]<0){//e2_left
+        pos2[1] = pos1[1] ;
+        pos1[0] += 0.5*h_char_obj;
+        pos2[0] = pos1[0] - 100 ;
+        h_for_l3 = 0;
+        situation = 'e2_left';
+    }else situation = 'same_page';
+    // top_y_used_list.push(pos1[1],pos1[1]+h_char_obj,pos2[1],pos2[1]+h_char_obj);
+    top_y_used_list.push(pos1[1],pos2[1]);
+    var top_y = Math.min.apply(Math,top_y_used_list) - (h1 + 25);//往上移动h1个高度，25px是label自身的高度
+    // myconsole(top_y_used_list,top_y);//dev
+    var left_x = Math.min(pos1[0],pos2[0]);
+    h_for_l1 = h_for_l1*(pos1[1] - top_y) ;
+    h_for_l3 = h_for_l3*(pos2[1] - top_y) ;
+    var y_set1 = top_y;
+    var y_set3 = top_y;
+    var y_label = top_y;
+
+
+    if(top_y<100){//太靠上了，下方显示，箭头向上
+        // myconsole('1579 offset_h',offset_h,'top_y=',top_y);
+        if((Math.min(pos1[1],pos2[1])+2*h1)<(Math.max(pos1[1],pos2[1]))){//两个实体离得足够远
+            if(pos1[1]>pos2[1]){//e2 over e1
+                situation +='E2OverE1_uparrow';  
+                var low_y = pos2[1]+1*h1; 
+            }else{
+                situation +='E1OverE2_downarrow';
+                var low_y = pos1[1]+1*h1; 
+            }
+            if(top_y_used_list.indexOf(low_y)!=-1) low_y+=30;
+        }else{
+            // var low_y = Math.max.apply(Math,top_y_used_list) + h_char_obj + h1 + offset_h;//obj的下方开始
+            var low_y = Math.max.apply(Math,top_y_used_list) + h_char_obj + h1 ;//obj的下方开始,根据已经用过的top_y_used_list中的low_y自动下移
+            // myconsole('1592 low_y=',low_y)
+            // myconsole('n= '+parseInt((100-top_y)/offset_h_step),offset_h,low_y);
+            y_set1 = pos1[1] + h_char_obj;
+            y_set3 = pos2[1] + h_char_obj;
+            situation +='_uparrow';
+        }
+        y_label = low_y;
+        top_y = low_y;//low_y returned by top_y
+    }else{
+        situation +='_downarrow';
+        // offset_h = 0;
+    }
+
+    // myconsole(label+'  '+situation)//dev
+    if(situation.indexOf('uparrow')!=-1){
+        var arrow = create_arrow(2,color,pos2[0],pos2[1]);
+        var h_for_l1 = low_y - pos1[1] - h_char_obj; //根据最低的y值和对象y值计算高度
+        var h_for_l3 = low_y - pos2[1] - h_char_obj;
+        if(situation.indexOf('e2_right')!=-1){
+            var arrow = create_arrow(3,color,pos2[0],y_label - 6);//right_arrow
+        }
+        else if(situation.indexOf('e2_left')!=-1){
+            var arrow = create_arrow(2,color,pos2[0],y_label - 6);//left_arrow
+        }else if(situation.indexOf('E2OverE1')!=-1){
+            var h_for_l1 = pos1[1] - low_y; //根据最低的y值和对象y值计算高度
+            var h_for_l3 = low_y - pos2[1] - h_char_obj;
+            y_set1 = low_y ;
+            y_set3 = pos2[1] + h_char_obj;
+            line_label_obj.style.borderBottom = "3px solid "+color;
+
+            var arrow = create_arrow(0,color,pos2[0],pos2[1]+h_char_obj);//up_arrow
+        }else{
+            var arrow = create_arrow(0,color,pos2[0],pos2[1]+h_char_obj);//up_arrow
+        }
+    }else{
+
+        if(situation.indexOf('e2_right')!=-1){
+            var arrow = create_arrow(3,color,pos2[0],y_set1 -6);//right_arrow
+            // y_set1: 与头实体的高度对齐
+            // 6px:  height of right arraw central line
+            // myconsole(pos2[1], h1 , offset_h);
+        }
+        else if(situation.indexOf('e2_left')!=-1){
+            var arrow = create_arrow(2,color,pos2[0],y_set1 -6);//left_arrow
+        }else if(situation.indexOf('E1OverE2')!=-1){
+            // myconsole("E1OverE2");//dev
+            var h_for_l3 = pos2[1] - low_y; //根据最低的y值和对象y值计算高度
+            var h_for_l1 = low_y - pos1[1] - h_char_obj;
+            y_set1 = pos1[1] + h_char_obj;
+            y_set3 = low_y ;
+            // line_label_obj.style.borderBottom = "3px solid "+color;
+
+            var arrow = create_arrow(1,color,pos2[0],pos2[1]-15);//减去箭头自身的高度//same_page_down_arrow
+        }
+        else{
+            var arrow = create_arrow(1,color,pos2[0],pos2[1]-15);//减去箭头自身的高度//same_page_down_arrow
+        } 
+    }
+    if(situation.indexOf('e1_')!=-1)         h_for_l1 = 0;
+    if(situation.indexOf('e2_')!=-1)         h_for_l3 = 0;
+    // myconsole(h_for_l1,h_for_l3);//dev
+    // myconsole(y_set1,h_for_l1,y_set3,h_for_l3,y_label);//dev
+
+    
+    line1_obj.style.borderLeft = "3px dotted "+color;
+    line1_obj.style.position = "absolute";
+    line1_obj.style.top = y_set1 + "px";
+    line1_obj.style.left = pos1[0] + "px";
+    line1_obj.style.height = h_for_l1 + "px";
+
+    line3_obj.style.borderLeft = "3px dotted "+color;
+    line3_obj.style.position = "absolute";
+    line3_obj.style.top = y_set3 + "px";
+    line3_obj.style.left = pos2[0] + "px";
+    line3_obj.style.height = h_for_l3 + "px";
+    
+    line_label_obj.style.borderTop = "3px solid "+color;
+    line_label_obj.style.borderBottom = "3px solid "+color;
+
+    line_label_obj.style.fontSize = "19px";
+    line_label_obj.style.fontFamily = "cursive";
+    line_label_obj.style.fontWeight = "bold";
+    // line_label_obj.style.borderLeft = "2px dashed #fff";
+    // line_label_obj.style.borderRight = "2px dashed #fff";
+    line_label_obj.style.position = "absolute";
+    line_label_obj.style.top = y_label + "px" ;
+    if(left_x!=pos1[0]){//第一个点在第二个点的右方，调整延伸方向
+        line_label_obj.style.left = (pos1[0] - min_w) + "px";
+        if((pos1[0] - min_w)<50) line_label_obj.style.textAlign='right';
+    }else{
+        line_label_obj.style.left = pos1[0]  + "px";
+        if(pos1[0]<50) line_label_obj.style.textAlign='right';
+    } 
+    var width_to_take = Math.abs(pos1[0] - pos2[0]);
+    var width_final = min_w;
+    if(width_to_take > min_w){//添加标签延伸出来的线，x座标为：leftx+min_w；宽度为：(width_to_take - width_final)
+        var line2_ex_obj = document.createElement('div');
+        line2_ex_obj.className = 'lines';
+        line2_ex_obj.style.position = "absolute";
+        line2_ex_obj.style.borderTop = "3px solid "+color;
+        line2_ex_obj.style.top = y_label + "px" ;
+        if(left_x!=pos1[0]){//第一个点在第二个点的右方，调整延伸方向
+            line2_ex_obj.style.left = pos2[0] + "px";
+        }else line2_ex_obj.style.left = (left_x + min_w) + "px"; 
+        
+        line2_ex_obj.style.width = (width_to_take - width_final) + "px";
+        line2_ex_obj.style.height = 0 + "px";
+        document.body.appendChild(line2_ex_obj);
+    }
+    line_label_obj.style.width = width_final + "px";
+    line_label_obj.style.height = 25 + "px";
+    if(label!='') line_label_obj.style.background = '#A9A9A9';
+    line_label_obj.style.color = '#000';
+    line_label_obj.style.zIndex = 998;
+    line_label_obj.innerHTML = label;
+    
+    document.body.appendChild(line_label_obj);
+    document.body.appendChild(line1_obj);
+    document.body.appendChild(line3_obj);
+    document.body.appendChild(arrow);
+    return top_y;
+}
+
+function clean_lines(){
+    var lines = document.getElementsByClassName('lines');
+    if(lines.length==0)return;
+    for(var l=lines.length-1;l>=0;l--){
+        lines[l].remove();
+    } 
+}
+function change_cursor_index(next_cursor_index){
+    // myconsole(cursor_obj.innerHTML);//tmp
+    if(next_cursor_index==-1)return;
+    try{
+        cursor_obj.style.color='#DAA520';//恢复正常颜色
+    }
+    catch(err){
+
+    }
+    cursor_index=next_cursor_index;
+    cursor_obj=lists[cursor_index];
+    cursor_obj.style.color='#4a4948';//快速变黑，实时反馈
+
+}
+function bottom_display(current_char_index){
+	var selected_obj=document.getElementById("selected");
+    var start_end_tmp=start_end_index(current_char_index,all_labels_loaded[current_page_index]);
+    var total_char_index_tmp=total_char_index_cal(start_end_tmp[0]);
+    selected_obj.innerHTML=lists[cursor_index].innerHTML+" : "+current_char_index+" : "+total_char_index_tmp+" : "+all_labels_loaded[current_page_index][current_char_index];
+    var relation_obj=document.getElementById("relation");
+    relation_obj.innerHTML="";
+    if(lists[start_end_tmp[0]].Id!=undefined){
+        // var relations_tmp=lists[start_end_tmp[0]].Id.split(';');
+        relation_obj.innerHTML = lists[start_end_tmp[0]].Id;
+        // for(var re in relations_tmp)   relation_obj.innerHTML+=re+':'+relations_tmp[re].slice(3)+'&nbsp';
+    }
+}
+function flash(obj){//光标闪烁
+    if(obj.style.color=='rgb(218, 165, 32)')obj.style.color='#4a4948';
+    else{obj.style.color='#DAA520'}
+}
+
+function little_correction(relative_index,label,location=''){
+    var correction=0;
+    try{
+    	label[relative_index][0]!='B'
+    }
+    catch(err){
+    	myconsole('little_correction 异常');//output
+    	myconsole(relative_index,label.length);//output
+        myconsole('位置：'+location);//output
+    	return  -999;
+    }
+    if(label[relative_index][0]!='B'){
+        myconsole('发现错位！');//output
+        if(relative_index>0&&label[relative_index-1][0]=='B')correction=-1;
+        else if((relative_index+1)<label.length&&label[relative_index+1][0]=='B')correction=1;
+        else{
+            myconsole('该错误无法修正:');//output
+            myconsole("相对位置=",relative_index,"标签=",label[relative_index]);//output
+            myconsole('位置='+location);//output
+            return -999;
+        }
+    }
+    return correction;
+}
+
+// function text2obj_color(text,label,spos){
+function text2obj_color(){
+    var display_start_y=-1;
+    var line_number=0;
+
+    var testobj=document.getElementById("CurrentContent");
+    var line_number_display_obj=document.getElementById("line_number");
+    testobj.innerHTML="";
+    line_number_display_obj.innerHTML="";
+    var label_last='';
+       // var testobj=document.getElementById("CurrentContent");
+       
+
+
+    //左右检查跨页面三元组 start
+    for(var i1=-1;i1<2;i1++){
+        if((current_page_index+i1)<0||(current_page_index+i1>=all_spos_loaded.length))continue;//跳过超出范围的i1
+        var spos_tmp=all_spos_loaded[current_page_index+i1];//取出该页面的三元组
+    //   if(spos_tmp.length>1){//如果该页面三元组存在标注结果
+        for(var i=spos_tmp.length-1;i>0;i--){//遍历三元组标注结果
+                var spo=spos_tmp[i];
+                var page_2_add=[];
+                
+                for(var j in spo){//s,p,o，先对各个元素进行修正，并判断需要在哪些页面添加三元组，最后根据实际情况添加跨页面三元组
+                    try{
+                        var test=spo[j][0]; 
+                    }
+                    catch(err){
+                        myconsole('spo[j][0]出错！'+' spo= '+spo+' j='+j);//output
+                        continue;
+                    }
+                    if(spo[j][0]=='关') continue;//跳过隐式关系
+                    var page_relative_index=total_char_index_2_relative_index(parseInt(spo[j]));
+
+                    if(j==0) var page=page_relative_index[0];//在三元组存储的页面进行索引值修正
+                    var relative_index=page_relative_index[1];
+
+
+                    var label = all_labels_loaded[page_relative_index[0]];//取出该页面的标签
+                    var correction=little_correction(relative_index,label,'p1 '+spo+' : '+j);
+                    if(correction!=0){//是否需要修正？
+                        if(correction==-999){
+                            // myconsole(spos_tmp[i])
+                            // myconsole(spo+' 存在错误，丢弃！');//output
+
+                            //至少检查一次当前页面，防止超出范围的三元组而又得不到清除
+                            var exist_index=query_2dlist(all_spos_loaded[current_page_index+i1],spo);
+                            if(exist_index!=-1){//已经存在             
+                                all_spos_loaded[current_page_index+i1].splice(exist_index,1);       
+                                myconsole(current_page_index+i1+'页面已丢弃：'+spo);//output
+                            }
+                            var page_index2store=total_char_index_2_relative_index(parseInt(spo[0]))[0];//头实体
+                            var exist_index=query_2dlist(all_spos_loaded[page_index2store],spo);
+                            if(exist_index!=-1){//已经存在             
+                                all_spos_loaded[page_index2store].splice(exist_index,1);       
+                                myconsole(page_index2store+'页面已丢弃：'+spo);//output
+                            }
+                            var page_tail = total_char_index_2_relative_index(parseInt(spo[2]))[0];//尾实体
+                            var exist_index=query_2dlist(all_spos_loaded[page_tail],spo);
+                            if(exist_index!=-1){//已经存在             
+                                all_spos_loaded[page_tail].splice(exist_index,1);       
+                                myconsole(page_tail+'页面已丢弃：'+spo);//output
+                            }
+                            page_2_add = [];
+                            break;
+                        }else{
+                            spo[j]=(parseInt(spo[j])+correction)+'';//修正索引值
+                        }
+                    }
+
+                    if(page_2_add.indexOf(page_relative_index[0])==-1&&page_relative_index[0]!=(current_page_index+i1)){//对(current_page_index+i1)的其它页面的三元组进行添加
+                        page_2_add.push(page_relative_index[0]);
+                    }
+                    
+
+                    //修正指标 start
+                    if(page!=(current_page_index+i1)){//其它页面的三元组
+                        var tmp=query_2dlist(all_spos_loaded[page],spo);
+                        if(tmp==-1){
+                            myconsole('text2obj_color 出错:query_2dlist(all_spos_loaded[page],spo)=-1! ');//output
+                            myconsole(''+all_spos_loaded[page],''+spo);//output
+                            break;
+                        }else                        
+                        all_spos_loaded[page][tmp][j]=(parseInt(all_spos_loaded[page][tmp][j])+correction)+'';//修正指标  
+                    } 
+                    // else
+                    // all_spos_loaded[page][i][j]=(parseInt(all_spos_loaded[page][i][j])+correction)+'';//修正指标
+                    // spo[j]=(parseInt(spo[j])+correction)+'';
+
+                    //修正指标 end
+                }
+            for(var page in page_2_add){//对需要添加三元组的页面添加三元组
+                var condition3=query_2dlist(all_spos_loaded[page_2_add[page]],spo)==-1;//是否已经添加跨界三元组？
+                    if(condition3){
+                        all_spos_loaded[page_2_add[page]].push(spo);
+                    }                 
+            }
+            }//s,p,o end        
+    }
+    
+    //左右检查跨页面三元组end
+    
+    var text = all_samples_loaded[current_page_index];
+    var label = all_labels_loaded[current_page_index];
+    for(var c in text){
+        if(text.length!=label.length){
+            myconsole('text2obj_color 传入的参数发生严重错误！');//output
+            // return;
+        }
+        var char = document.createElement('span');
+        // char.id='span'+c;
+        char.style.color='#D8A11D';
+        // if(label[c][0]=="B" || label[c][0]=="O"){
+        //     var cursor_obj = document.createElement('div');
+        //     cursor_obj.className="cursor";
+        //     testobj.appendChild(cursor_obj);
+        // }
+
+        char.innerHTML = text[c]==" "?"&nbsp;":text[c];
+
+        //实体可视化
+        if(label[c].length>2){
+            if(label[c][2]=="实") char.style.backgroundColor=config_entity[label[c].slice(5)];
+            // else if(label[c][2]=="关") char.style.backgroundColor="#228B22";
+            if(label[c][0]=="B"){
+              label_last=label[c].slice(2);
+              char.style.marginLeft="0.2em";//添加间隔
+            } 
+            if(label[c][0]=="I"&&label[c].slice(2)!=label_last){
+                var console_obj=document.getElementById('console');
+                console_obj.value+='\n'+c+'处标签不连续：\n  上个标签：'+label_last+'\n  当前标签：'+label[c].slice(2);
+                console_obj.value+='\n=======  End ';
+                char.style.backgroundColor="#dd4948";
+            }
+            // if(probability!=undefined)           char.style.backgroundColor=color_table[probability[c]];
+        }
+        if(text[c]=="_换行符_"){
+            char.style.backgroundColor="#00FF7F";//突出换行符
+            char.style.paddingLeft='0em';
+            // char.style.width="2px";
+            char.innerHTML='\\n';
+            testobj.appendChild(char);
+            var br = document.createElement('br');//显示换行
+
+            if(c!=0) testobj.appendChild(br);//首字符为换行的不显示
+        }else  testobj.appendChild(char);//这一批样本首字符为换行符，统计但不显示
+        // var length_tmp=Array.from(testobj.querySelectorAll('span')).length;
+    // if(length_tmp%25==0){//限定每行字符数
+    //     var br = document.createElement('br');//显示换行
+    //     testobj.appendChild(br);
+    // }
+    }
+     lists = Array.from(testobj.querySelectorAll('span'));
+     
+
+    //取出当前页面三元组进行显示
+    var spos=all_spos_loaded[current_page_index];
+    var label=all_labels_loaded[current_page_index];
+    // var tag=["S","P","O"];
+    var colors=["#FF0000","#32CD32","#1E90FF"];
+
+    //三元组可视化 start
+    if(spos.length>1){
+        var this_page_index=parseInt(spos[0][0]);
+        for(var i=1;i<spos.length;i++){
+            var spo=spos[i];
+            for(var j in spo){//s,p,o
+                if(spo[j][0]=='关')continue;
+                var page_relative_index=total_char_index_2_relative_index(parseInt(spo[j]));
+                if(page_relative_index[0]!=current_page_index)continue;//跳过不是本页的元素
+                var a_object=document.createElement("a");
+                a_object.style.marginLeft="0.2em";
+                a_object.innerHTML=i;
+                a_object.style.fontSize="0.8em";
+                a_object.style.backgroundColor=colors[j];
+                var spo_cut = [];
+                spo_cut.push(spo[0]);                
+                spo_cut.push(spo[1].slice(3));
+                spo_cut.push(spo[2]);
+                spo_cut.push(i);
+                if(lists[page_relative_index[1]].Id!=undefined){
+                    lists[page_relative_index[1]].Id+=';'+spo_cut.join(',');
+                }else lists[page_relative_index[1]].Id=spo_cut.join(',');
+                // myconsole(lists[relative_index].Id);//debug
+                testobj.insertBefore(a_object,lists[page_relative_index[1]]);
+        }
+      }
+    }
+    //三元组可视化 end
+
+
+//所有标记显示完毕，最后添加行号
+    var distance_y=[];
+    for(var i in lists){
+        var current_y=lists[i].getBoundingClientRect().top;
+        if(distance_y.indexOf(current_y)==-1){
+            distance_y.push(current_y)
+            var line_number_obj=document.createElement('li');
+            line_number_obj.style.margin="0 auto";
+            line_number_obj.style.width="32px";
+            line_number_obj.innerHTML=line_number;
+                // line_number_obj.style.borderBottom="solid";
+
+            line_number_obj.style.backgroundColor="#66CDAA";
+            line_number_display_obj.appendChild(line_number_obj);
+
+                // break;
+            line_number++;
+
+        }
+
+    }
+        //调整行号的位置和高度
+        var line_number_li_obj = Array.from(document.getElementById('line_number').querySelectorAll('li'));
+        for(var j=0;j< line_number_li_obj.length-1;j++){
+            line_number_li_obj[j].style.height = (distance_y[j+1]-distance_y[j])+'px';
+            line_number_li_obj[j].style.top = distance_y[j]+'px';
+        }
+
+    //显示锁定的三元组
+    if(sp_lock.length!=0){
+      spo_global=[];
+      for(var i in sp_lock){
+          var location_tmp=total_char_index_2_relative_index(parseInt(sp_lock[i]));
+          if(location_tmp[0]==current_page_index){//当前页面锁定的实体画框显示
+                    var se_tmp=start_end_index(location_tmp[1],all_labels_loaded[current_page_index]);
+                    if(i==1&&all_labels_loaded[current_page_index][se_tmp[0]][2]=='实')break;//
+                    render_rectangle(se_tmp);
+                }
+                spo_global.push(sp_lock[i]);
+            
+          }
+    indicator('on','已锁定');
+    }else indicator('off');
+
+    //显示锁定的三元组 end
+
+
+}
+function myconsole_clear(){
+    document.getElementById('console').value = "终端信息：";
+}
+function myconsole(){
+    //js中有一个arguments，可以访问所有传入的参数值
+		//window.alert(arguments.length);
+		//遍历所有参数 
+        var msg = arguments[0];
+		for(var i=1; i<arguments.length;i++){
+            msg+= ' '+arguments[i];
+		}
+    document.getElementById('console').value+='\n'+msg;
+}
+function text2obj(text){
+	var testobj=document.getElementById("CurrentContent");
+	testobj.innerHTML="";
+	for(var c in text){
+        if(c==0&&text[c]=='\n')continue;
+		var char = document.createElement('span');
+		var a = document.createElement('a');
+		char.innerHTML = text[c];
+		testobj.appendChild(char);
+	}
+}
+function render_rectangle(start_end_tmp,number=-1,style='groove'){//将本页面的start_end画矩形
+    if(start_end_tmp[0]==-1||start_end_tmp[1]==-1)return;
+
+    // var colors=["#FF0000","#32CD32","#1E90FF","#00FF00"];
+    var colors=["#FF0000","#32CD32","#00FF00"];
+    var borderw='2px';
+    var start_obj=lists[start_end_tmp[0]];
+    var end_obj=lists[start_end_tmp[1]];
+    var color_n=number==-1?spo_global.length:number;
+    start_obj.style.borderLeft=style;
+    start_obj.style.borderTop=style;
+    start_obj.style.borderBottom=style;
+    start_obj.style.borderWidth=borderw;
+    
+
+    start_obj.style.borderColor=colors[color_n];
+    end_obj.style.borderRight=style;
+    end_obj.style.borderTop=style;
+    end_obj.style.borderBottom=style;
+    end_obj.style.borderWidth=borderw;
+    end_obj.style.borderTopStyle=style;
+    end_obj.style.borderColor=colors[color_n];
+    for(var i=start_end_tmp[0]+1;i<start_end_tmp[1];i++){
+        var span_obj=lists[i];
+        span_obj.style.borderTop=style;
+        span_obj.style.borderBottom=style;
+        span_obj.style.borderLeft="none";
+        span_obj.style.borderRight="none";
+        span_obj.style.borderColor=colors[color_n];
+        span_obj.style.borderWidth=borderw;
+
+    }
+}
+function save(){
+    spo_global=[];
+    if(imported_flag==0)return;
+    var results=[]
+    var labels_result=[];
+    var tokens_result=[];
+    var spo_result=[];
+    var count = 0;
+    //实体和关系
+    for (var i = 0; i <all_labels_loaded.length; i++) {
+        for (var j = 0; j<all_labels_loaded[i].length; j++) {
+            var l=all_labels_loaded[i][j];
+            var t=all_samples_loaded[i][j]=="\n"? "_换行符_":all_samples_loaded[i][j];
+            if(l==undefined){
+                alert('标签l发现未定义：'+l+'\n需要人工检查标注文件'+count+'行处');
+		myconsole('标签l发现未定义：'+l+'\n需要人工检查标注文件'+count+'行处');
+//                 return;
+            }
+            if(t==undefined||t.length==0){
+                alert('标签t发现异常：'+t+'\n需要人工检查标注文件'+count+'行处');
+	        myconsole('标签t发现异常：'+t+'\n需要人工检查标注文件'+count+'行处');
+//                 return;
+            }
+            labels_result.push(l);
+            tokens_result.push(t);
+
+            spo_result.push("X");//初始化三元组域，全部用“X”
+		
+		count = count + 1;
+        }
+
+    }
+    //三元组
+    for(var i in all_spos_loaded){//遍历每个页面的三元组列表
+        if(all_spos_loaded[i].length==1)continue;//每个all_spos_loaded[i]第一个元素为分割索引值 ？？？
+
+        for(var j=1;j<all_spos_loaded[i].length;j++){//遍历当前页面下所有的三元组列表，0元素为起始字符索引，1以后才为三元组
+            if(all_spos_loaded[i][j][0]=='X'||all_spos_loaded[i][j][1]=='X'||all_spos_loaded[i][j][2]=='X') continue;//全为x ？？？
+            var spo_tmp=all_spos_loaded[i][j];
+            var page_2_store=total_char_index_2_relative_index(parseInt(spo_tmp[0]))[0];
+            if(page_2_store==i)  spo_result[parseInt(spo_tmp[0])]+=";"+spo_tmp.join(">");//只储存应该存在当页的三元组，排除补充的跨界三元组，避免重复存储
+        }
+
+    }
+    //字符 标签 三元组汇总
+    for(var i in spo_result){
+        if(cut_save_flag)if(current_page_index<total_char_index_2_relative_index(parseInt(i))[0]){//截断保存，提前退出
+          break;
+        }
+        if(spo_result[i][1]==";"){
+            spo_result[i]=spo_result[i].replace("X;","");
+        }
+        var t=tokens_result[i];
+        var l=labels_result[i];
+        if(l==undefined){
+            alert('汇总时，标签l发现问题 '+l+'，已修改为F，请在'+i+'处手动修改');
+            l='F';
+        }
+        if(t==undefined||t.length==0){
+            alert('汇总时，字符t发现问题'+t+'，已修改为?，请在'+i+'处手动修改\nt='+t+' t.length='+t.length);
+            t='?';
+            }
+        results.push(t+"\t"+l+"\t"+spo_result[i]);
+
+
+    }
+    var filename_tmp=filename;
+    
+    //制作保存的文件名：
+    //1.结束添加X符号
+    //2.截断保存添加cutted字段
+    //3.保存当前标注的页面
+    //4.添加.lann扩展名
+    if(current_page_index==all_samples_loaded.length-1)filename_tmp='x '+filename_tmp;
+    if(cut_save_flag)filename_tmp+='cutted';
+    var filename_2_save=filename_tmp+"#"+current_page_index+"#"+".lann";
+    if(run_mode=='qt'){
+        var data={'filename':filename_2_save,'data':results}        
+        data = JSON.stringify(data)
+        pyjs.save(data,function(y){
+            alert('成功保存为: '+y);
+        });
+    }else{
+        var blob = new Blob([results.join('\n')], {type: "text/plain;charset=utf-8"});
+        saveAs(blob,filename_2_save);
+    }
+}
+function save_dict(){
+    var diction_2_save = [];
+    if(Object.keys(entity_diction).length>0){
+        for(entity in entity_diction) diction_2_save.push(entity+'\t'+entity_diction[entity]);
+    }
+    if(Object.keys(relation_diction).length>0){
+        for(relation in relation_diction) diction_2_save.push(relation+'\t'+relation_diction[relation]);
+    }
+    if(diction_2_save.length>0){
+        myconsole('共保存'+diction_2_save.length+'个词条!');
+        if(run_mode=='qt'){
+            var data={'filename':'obj.dic','data':diction_2_save}        
+            data = JSON.stringify(data)
+            pyjs.save_dict(data,function(y){
+                alert('成功保存为: '+y);
+            });
+        }else{
+            var blob = new Blob([diction_2_save.join('\n')], {type: "text/plain;charset=utf-8"});
+            saveAs(blob,'diction.dic');
+        }
+
+    }
+}
+function indicator(on_off,message='未选中',icon_index=0){
+    var indicator_obj=document.getElementById("indicator");
+    // myconsole(message);//debug
+    if(on_off=='on'){
+         indicator_obj.style.backgroundColor="pink";
+         // this.cursor='url(cur.ico),auto';
+        // for(var i in lists) lists[i].style.cursor='pointer';
+        for(var i in lists) lists[i].style.cursor='url('+icon_index+'.png),auto';
+         // document.getElementById("span").style.cursor='pointer';
+         // this.css({cursor:"pointer"});
+    }else{
+         indicator_obj.style.backgroundColor="gray";
+        for(var i in lists) {
+            if(all_labels_loaded[current_page_index][i].length>1&&all_labels_loaded[current_page_index][i][2]=='实') var cursor_style='url(0.png),auto';
+            else var cursor_style='default';
+            lists[i].style.cursor=cursor_style;
+        }
+
+    }
+    indicator_obj.innerHTML=message;
+}
+function refresh(){
+    if(!imported_flag)return;
+    // if(back_chars!=undefined)        document.getElementById('del').innerHTML='撤销';
+    // else document.getElementById('del').innerHTML='删除';
+    var progress_obj=document.getElementById("progress");
+    progress_obj.innerHTML="当前进度："+current_page_index+"/"+total;
+    // text2obj_color(all_samples_loaded[current_page_index],all_labels_loaded[current_page_index],all_spos_loaded[current_page_index]);
+    clean_rectangle();
+    clean_lines();
+    text2obj_color();
+    var annoted_spo_obj=document.getElementById("annoted_spo");
+    annoted_spo_obj.innerHTML="已标注："+count_spo_lists+" 对三元组";
+    var annoted_ent_obj=document.getElementById("annoted_entity");
+    annoted_ent_obj.innerHTML="已标注："+count_new_entity+" 个新实体";
+    // var annoted_rel_obj=document.getElementById("annoted_relation");
+    // annoted_rel_obj.innerHTML="已标注："+count_new_relation+" 个新关系";
+    // var annoted_cap_obj=document.getElementById("cancle_point");
+    // annoted_cap_obj.innerHTML="已取消："+count_cancled_point+" 个标注点";
+    cursor();
+    // myconsole(spo_global);//debug
+    // myconsole(spo_global.length);//debug
+    for (var i = 0; i<spo_global.length; i++) {
+      if(spo_global[i][0]=='关')continue;//跳过隐含关系
+      var page_index = total_char_index_2_relative_index(parseInt(spo_global[i]));
+      if(page_index[0]==current_page_index)
+         render_rectangle(start_end_index(page_index[1],all_labels_loaded[current_page_index]),i);
+    }
+}
+ function getElCoordinate(dom) {
+                    var t = dom.offsetTop;
+                    var l = dom.offsetLeft;
+                    var w = dom.offsetWidth;
+                    var h = dom.offsetHeight;
+                    dom = dom.offsetParent;
+                    t += dom.offsetTop;
+                    l += dom.offsetLeft;
+                    dom = dom.offsetParent;
+                    return {
+                        top: t,
+                        left: l,
+                        width:w,
+                        height:h
+                    };
+}
+function getPos(pos1, pos2){
+              //分四种情况
+              var x1,y1,x2,y2;
+              if(pos2.top<pos1.top){
+                  //结束点位于左上角
+                  x1 = pos1.left + pos1.width/2;
+                  y1 = pos1.top;
+                  y2 = pos2.top + pos2.height
+                 if(pos2.left<pos1.left){
+                    x2 = pos2.left + pos2.width/2
+                 }else{//右上角
+                    x2 = pos2.left + pos2.width / 2
+                 }
+              }else{
+                  x1 = pos1.left + pos1.width / 2;
+                  y1 = pos1.top + pos1.height;
+                  x2 = pos2.left + pos2.width/2
+                  y2 = pos2.top 
+              }
+              return [x1,y1,x2,y2];
+           }
+function add_entity(){
+    if(state!="modify_able")
+    {
+        number_record('1');
+        return;
+    }
+    if((sp_lock.length!=0))return;
+    if(txtselected=="") txtselected=window.getSelection().toString();//得到选中的文字
+
+
+    if(txtselected==""){//当前未选中文字
+      start_end=start_end_index(current_char_index,all_labels_loaded[current_page_index]);
+      if(start_end[1]==-1&&(start_end[0]+1)<all_samples_loaded[current_page_index].length)//快速选中两个字符
+        start_end[1]=start_end[0]+1;
+      else if(start_end[1]==-1&&(start_end[0]+1)>=all_samples_loaded[current_page_index].length) return;
+    for(var i=start_end[0];i<=start_end[1];i++)txtselected+=all_samples_loaded[current_page_index][i];  
+    
+      // ####else for(var i=start_end[0];i<=start_end[1];i++)txtselected+=all_samples_loaded[current_page_index][i];
+    }
+
+    selected_flag=false;
+    var token_start_tmp=find_token_start(start_end[0],all_samples_loaded[current_page_index]);
+    var token_end_tmp=find_token_end(start_end[1],all_samples_loaded[current_page_index]);
+    tokens_2_server=extract_tokens(token_start_tmp,token_end_tmp,current_page_index,current_page_index);
+    tokesn_2_server_index_s=start_end[0]-token_start_tmp;
+    // 添加实体调试 start
+    txtselected=txtselected.replace(/&nbsp;/g," ");
+    txtselected=txtselected.replace(/&amp;/g,"&");
+    // 添加实体调试 end
+    if(last_char_index_queue[1]>start_end[0])  var last_char_index = last_char_index_queue[0];//判断是否有回跳操作
+    else var last_char_index = last_char_index_queue[1];
+    // cursor_position_prediction(all_samples_loaded[current_page_index],last_char_index,start_end[0]);
+    to_server(true,txtselected,tokesn_2_server_index_s,tokesn_2_server_index_s+txtselected.length, tokens_2_server,-1,'query');
+    last_char_index_queue.push(cursor_index);
+    last_char_index_queue.shift();
+}
+function cancle(){
+    if(state=='choosing'){
+      number_record('10');
+      return;
+    }
+    if(state!="modify_able")return;
+    selected_flag=false;
+    if(txtselected=="") txtselected=window.getSelection().toString();
+    var start_end_tmp=start_end_index(current_char_index,all_labels_loaded[current_page_index]);
+    if(all_labels_loaded[current_page_index][start_end_tmp[0]][0]=='B'){
+        var entity=extract_entity(start_end_tmp,all_samples_loaded[current_page_index]);
+        var entity_class=all_labels_loaded[current_page_index][start_end_tmp[0]].slice(2);
+        var token_start_tmp=find_token_start(start_end[0],all_samples_loaded[current_page_index]);
+        var token_end_tmp=find_token_end(start_end[1],all_samples_loaded[current_page_index]);
+      tokens_2_server=extract_tokens(token_start_tmp,token_end_tmp,current_page_index,current_page_index);
+      tokesn_2_server_index_s=start_end[0]-token_start_tmp;
+      to_server(true,entity,tokesn_2_server_index_s,tokesn_2_server_index_s+txtselected.length, tokens_2_server,entity_class,'delete');
+    }
+    if(txtselected!=""){
+        all_labels_loaded[current_page_index][current_char_index]='O';
+        for (var j = current_char_index+1; j<all_labels_loaded[current_page_index].length; j++) {
+            if(all_labels_loaded[current_page_index][j][0]!="I"&&j>=(end_char_index)) break;//一直改变标签直到末尾
+            all_labels_loaded[current_page_index][j]='O';
+        }
+    }else if(start_end_tmp[0]!=-1){//选中后取消
+            if(start_end_tmp[1]==-1){
+                all_labels_loaded[current_page_index][start_end_tmp[0]]='O';
+                for (var j = start_end_tmp[0]+1; j<all_labels_loaded[current_page_index].length; j++) {
+                    if(all_labels_loaded[current_page_index][j][0]!='I')break;
+                    all_labels_loaded[current_page_index][j]='O';
+                }
+            }else{
+                for (var j = start_end_tmp[0]; j<=start_end_tmp[1]; j++) {
+                    all_labels_loaded[current_page_index][j]='O';
+                }
+
+            }
+    }
+
+    txtselected="";
+    spo_global=[];
+    indicator('off');
+    refresh();
+}
+function query_2dlist(list2d,list1d){
+	for(var i in list2d){
+		var flag=true;
+		for(var j in list2d[i]){
+			if(list2d[i][j]!=list1d[j]){
+				flag=false;
+				break;
+			}
+		}
+		if(flag) return i;
+	}
+	return -1;
+
+}
+function spo_record(start_end_tmp){
+    
+		if(spo_global.indexOf(total_char_index)!=-1||all_labels_loaded[current_page_index][start_end_tmp[0]][0]!="B")return;
+        spo_global.push(total_char_index);
+        if(spo_global.length==3){
+          save_spo();
+        }else if(spo_global.length==2&&all_labels_loaded[total_char_index_2_relative_index(parseInt(spo_global[1]))[0]][total_char_index_2_relative_index(parseInt(spo_global[1]))[1]][2]=='实'&&all_labels_loaded[total_char_index_2_relative_index(parseInt(spo_global[0]))[0]][total_char_index_2_relative_index(parseInt(spo_global[0]))[1]][2]=='实'){
+            implicit_relation_flag=true;
+            var e1_page_index=total_char_index_2_relative_index(parseInt(spo_global[0]));
+            var e2_page_index=total_char_index_2_relative_index(parseInt(spo_global[1]));
+            var e1_start_end=start_end_index(e1_page_index[1],all_labels_loaded[e1_page_index[0]]);
+            var e2_start_end=start_end_index(e2_page_index[1],all_labels_loaded[e2_page_index[0]]);
+            var e1=extract_entity(e1_start_end,all_samples_loaded[e1_page_index[0]]);
+            var type_e1=all_labels_loaded[e1_page_index[0]][e1_start_end[0]].slice(2);
+            var e2=extract_entity(e2_start_end,all_samples_loaded[e2_page_index[0]]);
+            var type_e2=all_labels_loaded[e2_page_index[0]][e2_start_end[0]].slice(2);
+            if(e1_page_index[0]<e2_page_index[0]){
+                var token_start_tmp=find_token_start(e1_page_index[1],all_samples_loaded[e1_page_index[0]]);
+                var token_end_tmp=find_token_end(e2_page_index[1],all_samples_loaded[e2_page_index[0]]);
+                var tokens=extract_tokens(token_start_tmp,token_end_tmp,e1_page_index[0],e2_page_index[0]);
+                var e1_start_index=e1_page_index[1]-token_start_tmp;
+                var e1_index=[e1_start_index,e1_start_index+e1.length];
+                var e2_start_index=e2_page_index[1]+all_labels_loaded[e1_page_index[0]].length-token_start_tmp;
+                var e2_index=[e2_start_index,e2_start_index+e2.length];
+            }else if(e1_page_index[0]>e2_page_index[0]){
+                var token_start_tmp=find_token_start(e2_page_index[1],all_samples_loaded[e2_page_index[0]]);
+                var token_end_tmp=find_token_end(e1_page_index[1],all_samples_loaded[e1_page_index[0]]);
+                var tokens=extract_tokens(token_start_tmp,token_end_tmp,e2_page_index[0],e1_page_index[0]);
+                var e2_start_index=e2_page_index[1]-token_start_tmp;
+                var e2_index=[e2_start_index,e2_start_index+e2.length];
+                var e1_start_index=e1_page_index[1]+all_labels_loaded[e2_page_index[0]].length- token_start_tmp;
+                var e1_index=[e1_start_index,e1_start_index+e1.length];
+            }else{//页面相等
+                var token_start_tmp=find_token_start(Math.min(e1_page_index[1],e2_page_index[1]),all_samples_loaded[e2_page_index[0]]);
+                var token_end_tmp=find_token_end(Math.max(e1_page_index[1],e2_page_index[1]),all_samples_loaded[e1_page_index[0]]);
+                var tokens=extract_tokens(token_start_tmp,token_end_tmp,e1_page_index[0],e2_page_index[0]);
+                var e2_start_index=e2_page_index[1]-token_start_tmp;
+                var e2_index=[e2_start_index,e2_start_index+e2.length];
+                var e1_start_index=e1_page_index[1]-token_start_tmp;
+                var e1_index=[e1_start_index,e1_start_index+e1.length];
+            }
+            triple_relation_classfy_list.push(e1);
+            triple_relation_classfy_list.push(type_e1);
+            triple_relation_classfy_list.push(e1_index[0]);
+            triple_relation_classfy_list.push(e1_index[1]);
+            triple_relation_classfy_list.push(e2);
+            triple_relation_classfy_list.push(type_e2);
+            triple_relation_classfy_list.push(e2_index[0]);
+            triple_relation_classfy_list.push(e2_index[1]);
+            triple_relation_classfy_list.push(tokens);
+            
+            // tokens
+            // e1
+            // type_e1
+            // e2
+            // type_e2
+            server_triple_relation_classfy(triple_relation_classfy_list,-1,'query');
+            // type_choose(false,{"预测值":"服务器不可用","可信度":"0"});//直接选择两个实体之间的关系
+        // }else indicator('on','选中');
+    }//#########
+
+
+}
+function find_token_start(index_relative,tokens){
+    if(index_relative==0)return 0;
+    for(var i=index_relative-1;i>0;i--){
+        if(tokens[i]=='_换行符_'||tokens[i]=='。')return i+1;
+    }
+    return i;
+}
+function find_token_end(index_relative,tokens){
+    if(index_relative==(tokens.length-1))return index_relative;
+    for(var i=index_relative+1;i<tokens.length;i++){
+        if(tokens[i]=='_换行符_'||tokens[i]=='。')return i;
+    }
+    return i;
+}
+function extract_tokens(token_start,token_end,page_start,page_end){
+    if(page_start==page_end){
+        return all_samples_loaded[page_start].slice(token_start,token_end+1);
+    }else{
+        var token_list = all_samples_loaded[page_start].slice(token_start,all_samples_loaded[page_start].length).concat(all_samples_loaded[page_end].slice(0,token_end+1))
+        return token_list;
+    }
+}
+function extract_entity(start_end_tmp,tokens){
+        var entity_tmp="";
+        for(var i=start_end_tmp[0];i<=start_end_tmp[1];i++){
+            entity_tmp+=tokens[i];
+        }
+        return entity_tmp;    
+}
+document.documentElement.addEventListener('mousedown', function (event) {
+    if(!imported_flag||state!='modify_able')return;
+    obj_mousedown = event.target.tagName=="SPAN"?event.target:obj_mousedown;
+})
+document.documentElement.addEventListener('mouseup', function (event) {
+    var item = event.target;
+    if(!imported_flag||state!='modify_able'||event.target.tagName!="SPAN")return;
+    current_char_index = lists.indexOf(item);//current_char_index 设置处
+    if(current_char_index==-1) return;
+    obj_mouseup = event.target.tagName=="SPAN"?event.target:obj_mouseup;
+    start_end=[lists.indexOf(obj_mousedown),lists.indexOf(obj_mouseup)];//鼠标选中文本释放后，立即更新start_end全局变量
+    change_cursor_index(start_end[0]);
+    // if(all_labels_loaded[current_page_index][start_end[0]]!='O')return;//开头不为O标签，不跳出实体类型选择框
+    if(all_labels_loaded[current_page_index][start_end[1]]!='O'&&all_labels_loaded[current_page_index][start_end[0]]!='O')return;
+    //开头和末尾都同时不为O标签
+    add_entity();
+})
+document.documentElement.addEventListener('click', function (event) {
+	var item = event.target;
+    if(imported_flag==0||state!='modify_able')return;  
+    if(item.tagName=="SPAN"){
+        var tappedNow = item;
+        current_char_index=lists.indexOf(item);
+        if(current_char_index==-1){//点击的地方无效或者
+            clean_lines();    
+            return;
+        }
+        change_cursor_index(current_char_index);//移动光标，快速响应
+        cursor();
+        click_handle(current_char_index);
+
+
+	}else if(window.getSelection().toString()!="" && $(item).attr("id")=="CurrentContent"){////处理双击文字选中的情况
+		var txt=window.getSelection().toString();
+        current_char_index=Math.min(lists.indexOf(obj_mousedown),lists.indexOf(obj_mouseup));
+        end_char_index= Math.max(lists.indexOf(obj_mousedown),lists.indexOf(obj_mouseup));
+        if(current_char_index==-1){
+            window.getSelection().removeAllRanges();
+            return;
+        }
+        cursor_index=current_char_index;
+        cursor_obj=lists[cursor_index];
+        cursor_obj.style.color='#4a4948';
+        var selected_obj=document.getElementById("selected");
+        selected_obj.innerHTML=txt+" : "+total_char_index;
+	}else if(item.tagName=="BUTTON"){
+        return;
+    }else{
+        lock_flag=false;
+        spo_global=[];//点击空白处，清除已有的spo，清楚选中的方框
+        sp_lock=[];
+        spo_need_display = [];
+        indicator('off');
+        clean_rectangle();
+        clean_lines();
+
+    }
+})
+function click_handle(current_char_index){
+		//处理鼠标单击的情况
+        // outline_triple(current_char_index);
+
+
+        start_end=start_end_index(current_char_index,all_labels_loaded[current_page_index]);
+
+        if(start_end[0]==-1||start_end[1]==-1)return;
+        indicator('on','已选中',2);
+        total_char_index=total_char_index_cal(start_end[0]);
+		//单击未锁定且重复点击
+        if(spo_global.indexOf(total_char_index)!=-1) {
+            lock_flag = true;
+        }
+		if(!lock_flag&&(all_labels_loaded[current_page_index][start_end[0]][0]!="B"||(all_labels_loaded[current_page_index][start_end[0]][2]!="实")&&(spo_global.length==0))){//所选头字符标签不是B、第一个元素点击关系的情况
+        	clean_rectangle();
+            //无意义点击，恢复锁定的实体
+            if(sp_lock.length!=0){
+                	spo_global=[];
+           			for(var i in sp_lock){
+                  var se_tmp=start_end_index(total_char_index_2_relative_index(parseInt(sp_lock[i]))[1],all_labels_loaded[current_page_index]);
+                  if(i==1&&all_labels_loaded[current_page_index][se_tmp[0]][2]=='实')break;//两个实体被锁定，只取第一个锁定的实体
+           				render_rectangle(se_tmp,i);
+           				spo_global.push(sp_lock[i]);
+           			}
+
+
+                }else{//没有锁定的三元组，清空相关变量
+                	spo_global=[];
+                	indicator('off');
+                }
+                return;
+    }
+
+    // change_cursor_index(start_end[0]);
+    if(lock_flag && all_labels_loaded[current_page_index][start_end[0]][0]=="B"&&sp_lock.indexOf(total_char_index)==-1&&sp_lock.length<2){//锁定新元素
+        	window.getSelection ? window.getSelection().removeAllRanges() : document.selection.empty();
+        sp_lock.push(total_char_index+'');
+         indicator('on','已锁定',2);
+          for(var i in sp_lock)  render_rectangle(start_end_index(total_char_index_2_relative_index(parseInt(sp_lock[i]))[1],all_labels_loaded[current_page_index]),i);
+		}else{//只是选中元素
+			render_rectangle(start_end);
+		}
+
+		//记录三元组，进行处理
+    // outline_triple(current_char_index);
+    spo_record(start_end);
+}
+function total_char_index_2_relative_index(total_char_index_tmp){
+	for(var i=0;i<all_spos_loaded.length;i++){
+		if(total_char_index_tmp<all_spos_loaded[i][0][0])break //和每个页面起始索引值进行对比 <= not correcte
+	}
+  var page_tmp=(i-1)==all_spos_loaded.length?-1:(i-1);
+  var relative_index_tmp=total_char_index_tmp-all_spos_loaded[page_tmp][0][0];
+  relative_index_tmp=relative_index_tmp>=all_samples_loaded[page_tmp].length? all_samples_loaded[page_tmp].length-1:relative_index_tmp;
+	return [page_tmp,relative_index_tmp]//返回页码数和本页的相对索引值
+}
+function total_char_index_cal(current_index){
+    return current_index+parseInt(all_spos_loaded[current_page_index][0][0]);
+}
+function clean_rectangle(){
+    for(var i in lists)lists[i].style.border= "none";
+}
+function coloumnlize(contents){
+    var contents_coloumnlized=[];
+    var cut_flag=false;
+    var cut_starti=-1;
+    contents=contents.replace(/\t/g,'  ');//缩进符用双空格代替
+    contents=contents.replace(/\n\r\n/g,'\n');//双回车用单回车代替 #win
+    contents=contents.replace(/\r/g,'');// #win
+    contents=contents.replace(/\n\n/g,'\n');//双回车用单回车代替 #linux
+
+    for(var i in contents) {
+      contents_coloumnlized.push(contents[i]=="\n"? "_换行符_":contents[i]);
+    }
+    return contents_coloumnlized.join("\n");
+}
+function import_diction(content){
+    content=content.replace(/\r/g,'');// #win
+    content = content.split("\n");
+
+    try {
+        for(l in content){
+            var obj_label = content[l].split('\t');
+            if(content[l][0]=='#'){
+                relation_diction[obj_label[0]] = obj_label[1];
+            }else{
+                entity_diction[obj_label[0]] = obj_label[1];
+            }
+        }
+        myconsole('导入',Object.keys(entity_diction).length,'个实体词条');//output
+        myconsole('导入',Object.keys(relation_diction).length,'个关系词条');//output
+    } catch (error) {
+        alert('字典文件格式不支持！');
+    }
+}
+$("#fileImport").click(function () {
+            $("#files").click();
+        })
+        function fileImport() {
+            document.activeElement.blur();
+            //获取读取我文件的File对象
+            var selectedFile = document.getElementById('files').files[0];
+            imported_flag=0;
+            myconsole_clear();//output
+            if(selectedFile==undefined){//没有选择文件
+                if(all_samples_loaded.length!=0)imported_flag = 1;//已经加载文件  
+                return;
+            }
+            var name = selectedFile.name;//读取选中文件的文件名
+            var size = selectedFile.size;//读取选中文件的大小
+            var diction_file_flag = 0;
+            if(name.indexOf('.dic')!==-1&&name[name.length-1]=='c') diction_file_flag=1
+            var reader = new FileReader();//这是核心,读取操作就是由它完成.
+            reader.readAsText(selectedFile);//读取文件的内容,也可以读取文件的URL
+            reader.onload = function () {
+                //当读取完成后回调这个函数,然后此时文件的内容存储到了result中,直接操作即可
+                if(diction_file_flag){
+                    import_diction(this.result);
+                    if(all_spos_loaded.length!=0)imported_flag=1;//之前导入过文件
+                    myconsole(imported_flag,all_spos_loaded.length);//output
+                    return;
+                }
+                filename=name[name.length-1]=="t"? name:name.slice(0,name.length-5);//.txt
+                document.getElementById('filename').innerHTML=name;
+                txts=this.result;
+                var samples=[];
+                var labels=[];
+                var tmp=[];
+                var label_tmp=[];
+                var spo_tmp=[];
+                var spo_dic_tmp=[];
+                var spo_lists_per_page=[['0','0','0']];
+                var mode=-1;
+                cursor_index=0;
+                count_spo_lists=0;
+                imported_flag=1;
+                all_spos_loaded=[];
+
+                contents=txts.split("\n");
+
+                if(contents[0].indexOf("\t")==-1)contents=coloumnlize(txts).split("\n");
+
+                mode=contents[0].trim().split("\t").length;//判断有多少列
+                var char_number = 0;
+                for(i in contents){
+                    var row_tmp = contents[i].trim();
+                    if(row_tmp.length==0&&contents[i]!=' '){//trim后的字符为空了，但是保留纯文本输入时其中的空格
+                        myconsole(i,'处空行');//output
+                        continue;//空行
+                    }
+                    row_tmp = contents[i]; //contents[i]=' ',纯文本输入，当前字符为空格
+                  	c_l=row_tmp.split("\t");
+                      // if(c_l.length!=mode){//标注完整性检查
+                      //     alert(i+'处标注存在问题！\n'+c_l.length+'!='+mode);
+                      //
+                      //     return;
+                      // }
+                      if(c_l.length>=3){//包含三元组空间，读取进来
+                            if(c_l.length>3){
+                                alert("当前语料文件 "+i+" 处存在多余的缩进符！");
+                                return;
+                            }
+                          spo_read=c_l[2];
+                          if(spo_read[0]!="X"){//存在三元组标记
+                              var spos=spo_read.split(";");//尝试切分多个三元组
+                              for(var k in spos){
+                                  var spos_char=[];
+                                  var spo_tmp_char=spos[k].split(">");//切分单个三元组
+                                  // for(var j in spo_tmp_number)spos_number.push(parseInt(spo_tmp_number[j]));
+                                  for(var j in spo_tmp_char)spos_char.push(spo_tmp_char[j].trim());
+                                  if(query_2dlist(spo_lists_per_page,spos_char)==-1){
+                                        spo_lists_per_page.push(spos_char);
+                                        count_spo_lists+=1;
+                                  } 
+                                  else myconsole('发现重复三元组：'+spos_char);//output
+                                  
+                                  }
+                              }
+                      }
+                      // var aaa='BIO';
+                      // alert(mode);
+                      if(c_l.length==2&&mode==3&&('BIO'.indexOf(c_l[0]!=-1))){
+                        c_l = [' '].concat(c_l);//字符缺失掉，用空格补充
+                        myconsole('字符缺失掉，用空格补充');//output
+                      } 
+                      c=c_l[0];
+                      if(c==undefined)myconsole('2757 c==undefined Bigerror');//output
+                      if(c_l.length==1)l="O";//原始文本无标注，标签用O代替
+                      else l=c_l[1];
+
+
+                  	if(((c=='_换行符_')&&(tmp.length>200))||((tmp.length>800&&('。；;!！'.indexOf(c)!=-1))
+                      )){
+                            tmp.push(c);
+                            label_tmp.push(l.trim());
+                            samples.push(tmp);
+                            all_spos_loaded.push(spo_lists_per_page);
+                            var page_index=parseInt(char_number)+1;
+                            spo_lists_per_page=[[page_index+'',page_index+'',page_index+'']];
+                            labels.push(label_tmp);
+                            if(tmp.length!=label_tmp.length){
+                              myconsole(tmp.length);//output
+                              myconsole(label_tmp.length);//output
+                              alert('分割时，tmp 和 label_tmp长度不同！');
+                              return;
+                            }
+                            label_tmp=[];
+                            tmp=[];
+                  	}else{
+                        tmp.push(c);
+                        label_tmp.push(l.trim());
+                        if(tmp.length!=label_tmp.length){
+                          myconsole(tmp.length);//output
+                          myconsole(label_tmp.length);//output
+                          alert('字符和标签长度不对应，检查数据！');
+                          return;
+                        }
+                  	}
+                    char_number += 1;
+                  }
+
+                  if(samples.indexOf(tmp)==-1&&tmp!=""&&tmp!="\n"){//追加剩下的，同时排除空和只有一个换行符的情况。
+                      samples.push(tmp);
+                      labels.push(label_tmp);
+                      all_spos_loaded.push(spo_lists_per_page);
+                  }
+
+                  current_page_index=-1;
+                  if(filename.indexOf("#")!=-1){//尝试从文件名中读取上次标注页码
+                      page_saved=filename.split("#");
+                      if(page_saved.length==3){
+                          current_page_index=parseInt(page_saved[1]);
+                          // for(var i=0;i<=current_page_index;i++)page_predicted.push(i);//标注过的页面不再进行预测
+                          filename=page_saved[0];
+                          }
+                      }else  page_predicted=[];
+                  if(current_page_index==-1||current_page_index>=all_spos_loaded.length){
+                      current_page_index=0;//初始页码
+                      filename+=".";
+                  }
+                  // current_page_index=0;//for debug
+                  cursor_index=0;
+                  total=samples.length-1;
+                  count_new_entity=0;
+                  count_new_relation=0;
+                  count_cancled_point=0;
+                  var jump_option_object=document.getElementById("jump");
+                  jump_option_object.options.length=0;
+                  for(var i=0;i<samples.length;i++){
+                      var option_obj=document.createElement("option");
+                      option_obj.value=i;
+                      option_obj.innerHTML=i;
+                      jump_option_object.appendChild(option_obj);
+                  }
+                  all_samples_loaded=samples;
+                  all_labels_loaded=labels;
+                  spo_global=[];
+                  sp_lock=[];
+
+                  if(seqlab_flag&&page_predicted.indexOf(current_page_index)==-1&&all_spos_loaded[current_page_index].length<=1){
+                    page_predicted.push(current_page_index);
+                    seq_labing_to_server(seqlab_flag,all_samples_loaded[current_page_index],[],'query');
+                  }
+                  
+                    document.activeElement.blur();
+                  type_choose_close();//设置好实体关系选项界面的显示属性为none
+                  indicator('off');
+                  //初始化视野
+                  var position=cursor_obj.getBoundingClientRect();
+                  view_adjust(position);
+                  state="modify_able";
+              }
+
+        }
+</script>
+</body>
